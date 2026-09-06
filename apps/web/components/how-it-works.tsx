@@ -30,8 +30,8 @@ const STEPS = [
  */
 export function HowItWorks() {
   return (
-    <section className="px-12 pb-12 pt-4">
-      <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-line bg-line">
+    <section className="px-6 pb-12 pt-4 sm:px-12">
+      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-3">
         {STEPS.map((step) => (
           <div key={step.n} className="flex flex-col gap-2.5 bg-surface p-6">
             <div className="flex items-center justify-between">

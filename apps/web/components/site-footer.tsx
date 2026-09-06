@@ -7,7 +7,7 @@ import { VMWordmark } from "@/components/vm-wordmark";
  */
 export function SiteFooter() {
   return (
-    <footer className="mt-auto flex items-center justify-between gap-4 border-t border-line px-6 py-3.5 font-mono text-[11.5px] tracking-[0.02em] text-muted">
+    <footer className="mt-auto flex flex-wrap items-center justify-between gap-4 border-t border-line px-6 py-3.5 font-mono text-[11.5px] tracking-[0.02em] text-muted">
       <div className="flex items-center gap-3.5">
         <VMWordmark size={12} />
         <span className="text-faint">© 2026</span>

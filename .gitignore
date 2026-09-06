@@ -4,10 +4,10 @@ node_modules/
 .pnp.*
 
 # testing
-/coverage
-/test-results
-/playwright-report
-/blob-report
+coverage/
+test-results/
+playwright-report/
+blob-report/
 
 # next.js
 .next/

@@ -10,7 +10,7 @@ import { vmButtonClasses } from "@/components/vm-button";
  */
 export function Hero() {
   return (
-    <section className="grid grid-cols-[1.05fr_1fr] items-center gap-14 px-12 pb-8 pt-16">
+    <section className="grid grid-cols-1 items-center gap-14 px-6 pb-8 pt-16 sm:px-12 lg:grid-cols-[1.05fr_1fr]">
       <div>
         <div className="inline-flex items-center gap-2 rounded-full border border-line bg-accent-lo py-[5px] pl-1.5 pr-2.5 text-[11px] font-medium text-accent-ink">
           <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-accent text-white">

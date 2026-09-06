@@ -9,7 +9,7 @@ import { VMWordmark } from "@/components/vm-wordmark";
  */
 export function SiteHeader() {
   return (
-    <header className="flex items-center justify-between border-b border-line px-12 py-[18px]">
+    <header className="flex items-center justify-between border-b border-line px-6 py-[18px] sm:px-12">
       <Link href="/" aria-label="videomax home">
         <VMWordmark size={18} />
       </Link>
