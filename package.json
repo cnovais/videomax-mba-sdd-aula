@@ -1,0 +1,7 @@
+{
+  "name": "videomax",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}
