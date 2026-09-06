@@ -3,5 +3,10 @@
   "private": true,
   "workspaces": [
     "apps/*"
-  ]
+  ],
+  "scripts": {
+    "dev:backend": "npm --workspace @videomax/backend run dev",
+    "dev:web": "npm --workspace @videomax/web run dev",
+    "gates": "node scripts/run-gates.mjs"
+  }
 }
