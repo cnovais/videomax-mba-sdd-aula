@@ -21,13 +21,13 @@
       "priority": 1,
       "wave": 1,
       "dependencies": [],
-      "status": "implemented",
+      "status": "done",
       "cycles": 0,
       "failure_reason": null,
-      "report_path": null,
+      "report_path": "docs/F02-authentication-system/eval-report-20260906T173254Z.md",
       "started_at": "2026-09-06T14:10:00Z",
-      "updated_at": "2026-09-06T14:30:00Z",
-      "completed_at": null
+      "updated_at": "2026-09-06T17:47:00Z",
+      "completed_at": "2026-09-06T17:47:00Z"
     },
     "F03": {
       "name": "Video Upload",
