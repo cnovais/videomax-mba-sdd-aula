@@ -1,0 +1,47 @@
+{
+  "name": "@videomax/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "depcruise": "depcruise src --config .dependency-cruiser.cjs",
+    "check-arch": "tsx scripts/check-architecture.ts",
+    "circular": "madge --circular --extensions ts src",
+    "orphans": "knip",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^5",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16",
+    "fastify": "^5",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@typescript-eslint/eslint-plugin": "8.50.0",
+    "@typescript-eslint/parser": "8.50.0",
+    "dependency-cruiser": "^16",
+    "eslint": "9.39.4",
+    "knip": "^5",
+    "madge": "^8",
+    "prisma": "^5",
+    "tsx": "^4",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

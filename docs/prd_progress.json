@@ -8,26 +8,26 @@
       "priority": 2,
       "wave": 1,
       "dependencies": [],
-      "status": "implemented",
+      "status": "done",
       "cycles": 0,
       "failure_reason": null,
-      "report_path": null,
+      "report_path": "docs/F01-landing-page/eval-report-20260906T014122Z.md",
       "started_at": "2026-09-06T00:27:30Z",
-      "updated_at": "2026-09-06T00:51:34Z",
-      "completed_at": null
+      "updated_at": "2026-09-06T01:50:00Z",
+      "completed_at": "2026-09-06T01:50:00Z"
     },
     "F02": {
       "name": "Authentication System",
       "priority": 1,
       "wave": 1,
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
       "cycles": 0,
       "failure_reason": null,
-      "report_path": null,
-      "started_at": null,
-      "updated_at": "2026-09-05T20:08:19Z",
-      "completed_at": null
+      "report_path": "docs/F02-authentication-system/eval-report-20260906T173254Z.md",
+      "started_at": "2026-09-06T14:10:00Z",
+      "updated_at": "2026-09-06T17:47:00Z",
+      "completed_at": "2026-09-06T17:47:00Z"
     },
     "F03": {
       "name": "Video Upload",

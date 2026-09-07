@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["scripts/*.ts", "prisma/seed.ts"],
+  "project": ["src/**/*.ts", "scripts/**/*.ts"],
+  "ignore": [
+    "src/domain/_shared/**",
+    "src/infra/http/handler.ts",
+    "src/infra/http/middleware/**",
+    "src/infra/http/index.ts"
+  ],
+  "ignoreBinaries": ["eslint", "tsc", "tsx", "vitest", "prisma", "depcruise", "madge", "knip"],
+  "ignoreDependencies": ["eslint", "madge", "tsx", "prisma", "dependency-cruiser", "knip"],
+  "ignoreExportsUsedInFile": true
+}
