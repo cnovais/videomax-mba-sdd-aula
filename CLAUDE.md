@@ -1,3 +1,12 @@
+## Login
+
+- Default account (seeded, admin): `admin@admin.com` / `Admin1234`.
+- Regular account (seeded): `existing@example.com` / `ValidPass123`.
+- URL: `http://localhost:<web-port>/login` — the web port is printed by
+  `./scripts/init.sh` at the end of its run (`3000` by default on the
+  `main` branch; other branches get an offset port shown in that same
+  "Ready." output).
+
 ## Environment
 
 - **Next.js port:** the default port `3000` is usually in use — pick the first free port starting at `3001` and set `APP_PORT` in `.env.local`.
