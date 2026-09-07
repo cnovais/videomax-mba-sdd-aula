@@ -17,6 +17,7 @@ import { RegisterHandler } from "@/infra/http/auth/register.handler";
 import { LoginHandler } from "@/infra/http/auth/login.handler";
 import { LogoutHandler } from "@/infra/http/auth/logout.handler";
 import { MeHandler } from "@/infra/http/auth/me.handler";
+import { GetHealthHandler } from "@/infra/http/health/get-health.handler";
 
 import { buildHttpRoutes } from "@/infra/http/index";
 import { AuthMiddleware } from "@/infra/http/middleware/auth";
@@ -42,9 +43,16 @@ export function bootstrap(): Promise<FastifyInstance> {
   const loginHandler = new LoginHandler(authenticateUser);
   const logoutHandler = new LogoutHandler(revokeSession);
   const meHandler = new MeHandler(getCurrentUser);
+  const getHealthHandler = new GetHealthHandler();
 
   // 5. Routes + auth middleware
-  const routes = buildHttpRoutes({ registerHandler, loginHandler, logoutHandler, meHandler });
+  const routes = buildHttpRoutes({
+    registerHandler,
+    loginHandler,
+    logoutHandler,
+    meHandler,
+    getHealthHandler,
+  });
   const authMiddleware = new AuthMiddleware(resolveSession);
 
   // 6. Server

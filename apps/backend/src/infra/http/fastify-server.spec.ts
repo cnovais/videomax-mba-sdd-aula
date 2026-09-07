@@ -11,6 +11,7 @@ import { RegisterHandler } from "./auth/register.handler";
 import { LoginHandler } from "./auth/login.handler";
 import { LogoutHandler } from "./auth/logout.handler";
 import { MeHandler } from "./auth/me.handler";
+import { GetHealthHandler } from "./health/get-health.handler";
 import { buildHttpRoutes } from "./index";
 import { AuthMiddleware } from "./middleware/auth";
 import { buildFastifyServer } from "./fastify-server";
@@ -32,6 +33,7 @@ function buildTestApp(): FastifyInstance {
     loginHandler: new LoginHandler(authenticateUser),
     logoutHandler: new LogoutHandler(revokeSession),
     meHandler: new MeHandler(getCurrentUser),
+    getHealthHandler: new GetHealthHandler(),
   });
 
   return buildFastifyServer({
@@ -137,5 +139,11 @@ describe("fastify-server — auth routes (in-memory-backed)", () => {
 
     expect(res.statusCode).toBe(409);
     expect(res.json()).toMatchObject({ code: "USER_ALREADY_EXISTS" });
+  });
+
+  it("GET /health returns 200 ok without authentication", async () => {
+    const res = await app.inject({ method: "GET", url: "/health" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ status: "ok" });
   });
 });
