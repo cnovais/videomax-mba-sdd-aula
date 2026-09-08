@@ -1,5 +1,6 @@
 import type { PageInput, PageOutput } from "@/domain/_shared/pagination";
 import type { VideoListItem } from "@/domain/video/video.queries";
+import { toThumbnailUrl } from "./upload-video.dto";
 
 export type ListVideosInput = PageInput & { actorId: string };
 export type ListVideosOutput = PageOutput<VideoListItemDto>;
@@ -19,7 +20,7 @@ export function toItemOutput(item: VideoListItem): VideoListItemDto {
     id: item.id,
     title: item.title,
     status: item.status,
-    thumbnailUrl: item.thumbnailPath ? `/videos/${item.id}/thumbnail` : null,
+    thumbnailUrl: toThumbnailUrl(item.id, item.thumbnailPath),
     sizeBytes: item.sizeBytes,
     durationSeconds: item.durationSeconds,
     uploadedAt: item.uploadedAt.toISOString(),

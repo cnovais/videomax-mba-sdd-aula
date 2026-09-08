@@ -16,7 +16,15 @@ export default async function AppPlaceholderPage() {
   const token = await getSessionToken();
   if (!token) redirect("/");
 
-  const meResponse = await backendFetch("/auth/me", { method: "GET" }, token);
+  // Neither call depends on the other's result (both only need `token`),
+  // so they run concurrently — the `/videos` fetch on the failure path
+  // below is simply discarded, cheaper than paying for two round trips
+  // on every page load.
+  const [meResponse, videosResponse] = await Promise.all([
+    backendFetch("/auth/me", { method: "GET" }, token),
+    backendFetch("/videos", { method: "GET" }, token),
+  ]);
+
   // A Server Component cannot clear cookies itself (Next.js restriction),
   // so a stale/invalid token redirects through the logout Route Handler's
   // GET variant, which clears the cookie before landing on `/` — this
@@ -24,7 +32,6 @@ export default async function AppPlaceholderPage() {
   if (!meResponse.ok) redirect("/api/auth/logout");
   const user = (await meResponse.json()) as { name: string };
 
-  const videosResponse = await backendFetch("/videos", { method: "GET" }, token);
   const initialVideos: UploadedVideo[] = videosResponse.ok
     ? ((await videosResponse.json()) as { items: UploadedVideo[] }).items
     : [];

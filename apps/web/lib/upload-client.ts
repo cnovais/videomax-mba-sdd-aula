@@ -1,4 +1,6 @@
-const ACCEPTED_EXTENSIONS = ["mp4", "mov", "mkv", "webm", "avi"];
+// Exported so the drop zone's file-picker `accept` attribute and helper
+// text derive from this one list instead of restating it.
+export const ACCEPTED_EXTENSIONS = ["mp4", "mov", "mkv", "webm", "avi"];
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024 * 1024; // 2GB — matches the backend's own limit
 
 export const UNSUPPORTED_FORMAT_MESSAGE = "Only MP4, MOV, MKV, WEBM, and AVI files are supported";

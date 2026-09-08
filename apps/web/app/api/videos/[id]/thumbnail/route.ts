@@ -1,15 +1,13 @@
 import { backendFetch } from "@/lib/backend-client";
-import { getSessionToken } from "@/lib/session";
+import { requireSessionToken } from "@/lib/session";
 
 /** Streams the backend's thumbnail JPEG straight through — never buffered. */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
-  const token = await getSessionToken();
-  if (!token) {
-    return Response.json({ code: "UNAUTHENTICATED", message: "Authentication required" }, { status: 401 });
-  }
+  const token = await requireSessionToken();
+  if (token instanceof Response) return token;
 
   const { id } = await params;
   const backendResponse = await backendFetch(`/videos/${id}/thumbnail`, { method: "GET" }, token);

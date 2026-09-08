@@ -20,6 +20,11 @@ export type UploadVideoOutput = {
   uploadedAt: string;
 };
 
+/** Shared with list-videos.dto.ts's `toItemOutput` — one source of truth for the URL scheme. */
+export function toThumbnailUrl(id: string, thumbnailPath: string | null): string | null {
+  return thumbnailPath ? `/videos/${id}/thumbnail` : null;
+}
+
 export function toOutput(video: Video): UploadVideoOutput {
   return {
     id: video.id,
@@ -30,7 +35,7 @@ export function toOutput(video: Video): UploadVideoOutput {
     durationSeconds: video.durationSeconds,
     containerFormat: video.containerFormat,
     status: video.status,
-    thumbnailUrl: video.thumbnailPath ? `/videos/${video.id}/thumbnail` : null,
+    thumbnailUrl: toThumbnailUrl(video.id, video.thumbnailPath),
     uploadedAt: video.uploadedAt.toISOString(),
   };
 }

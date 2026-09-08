@@ -10,11 +10,6 @@ export class ListVideosUseCase {
       pageSize: input.pageSize,
     });
 
-    return {
-      items: page.items.map(toItemOutput),
-      page: page.page,
-      pageSize: page.pageSize,
-      total: page.total,
-    };
+    return { ...page, items: page.items.map(toItemOutput) };
   }
 }
