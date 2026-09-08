@@ -46,6 +46,7 @@
 - Video 1: https://drive.google.com/file/d/1JM1jrv5CHJnyILDuqXpEkZB0MyQCLkSl/view?usp=sharing (94MB)
 - Video 2: https://drive.google.com/file/d/1r4ovc2PiLMUt7IHf2k7IPR1p7GIfeOm6/view?usp=sharing (454MB)
 - Save the videos on `video-samples` as needed.
+- For a >2GB test file, run `./scripts/generate-oversized-video.sh` (never commit its output).
 
 ## OpenAI API Key
 - Get it from system env

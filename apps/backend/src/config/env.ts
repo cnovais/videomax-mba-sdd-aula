@@ -6,6 +6,7 @@ const schema = z.object({
   logLevel: z.enum(["debug", "info", "warn", "error"]).default("info"),
   databaseUrl: z.string().url(),
   sessionSecret: z.string().min(1),
+  storageRoot: z.string().default("./storage"),
 });
 
 const parsed = schema.safeParse({
@@ -13,6 +14,7 @@ const parsed = schema.safeParse({
   logLevel: process.env["LOG_LEVEL"],
   databaseUrl: process.env["DATABASE_URL"],
   sessionSecret: process.env["SESSION_SECRET"],
+  storageRoot: process.env["STORAGE_ROOT"],
 });
 
 if (!parsed.success) {

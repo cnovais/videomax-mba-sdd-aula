@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360" role="img" aria-label="No thumbnail available">
+  <defs>
+    <linearGradient id="vmPlaceholderBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3a2e14"/>
+      <stop offset="100%" stop-color="#1a1408"/>
+    </linearGradient>
+    <pattern id="vmPlaceholderStripe" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+      <line x1="0" y1="0" x2="0" y2="14" stroke="#ffffff" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="640" height="360" rx="6" fill="url(#vmPlaceholderBg)"/>
+  <rect width="640" height="360" rx="6" fill="url(#vmPlaceholderStripe)" opacity="0.08"/>
+  <g transform="translate(320,180)">
+    <circle r="34" fill="#FB8B3D" opacity="0.16"/>
+    <path d="M-10 -16 L18 0 L-10 16 Z" fill="#FB8B3D"/>
+  </g>
+</svg>

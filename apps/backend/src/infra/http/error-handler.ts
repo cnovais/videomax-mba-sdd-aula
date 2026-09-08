@@ -30,9 +30,29 @@ export function toHttpResponse(error: unknown): HttpResponse {
     };
   }
 
+  // @fastify/multipart's own file-size-limit error (thrown mid-stream, once
+  // the upload exceeds `limits.fileSize` — see fastify-server.ts). Server-
+  // side re-validation, independent of the client-side check; see spec's
+  // Technical Decisions.
+  if (isFastifyFileTooLargeError(error)) {
+    return {
+      status: 413,
+      body: { code: "FILE_TOO_LARGE", message: "Files must be at most 2GB" },
+    };
+  }
+
   console.error("Unexpected error:", error);
   return {
     status: 500,
     body: { code: "INTERNAL_ERROR", message: "Unexpected error" },
   };
+}
+
+function isFastifyFileTooLargeError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "FST_REQ_FILE_TOO_LARGE"
+  );
 }

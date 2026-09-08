@@ -41,3 +41,11 @@ next-env.d.ts
 
 # scripts/init.sh runtime state (PID files, dev-server logs)
 .pids/
+
+# on-demand-generated oversized video fixture (scripts/generate-oversized-video.sh)
+# — never commit this; regenerate locally whenever it's needed
+video-samples/oversized*
+
+# F03 local video storage (uploaded files + extracted thumbnails)
+apps/backend/storage/
+apps/backend/storage-test/
