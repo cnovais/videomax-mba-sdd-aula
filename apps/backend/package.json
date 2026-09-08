@@ -23,6 +23,7 @@
     "prisma:migrate:dev": "prisma migrate dev"
   },
   "dependencies": {
+    "@fastify/multipart": "^9",
     "@prisma/client": "^5",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16",
