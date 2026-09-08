@@ -3,9 +3,14 @@ import Fastify, {
   type FastifyReply,
   type FastifyRequest,
 } from "fastify";
+import multipart from "@fastify/multipart";
 import { toHttpResponse } from "./error-handler";
 import type { AuthMiddleware } from "./middleware/auth";
-import type { HttpMethod, HttpRequest, HttpRoute } from "./types";
+import type { HttpRequest, HttpRoute } from "./types";
+
+// PRD-fixed product policy (2GB), not deployment config — see
+// domain/video/video-extension.vo.ts for the sibling format allowlist.
+const MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024;
 
 type BuildFastifyServerInput = {
   routes: HttpRoute[];
@@ -14,7 +19,8 @@ type BuildFastifyServerInput = {
 };
 
 export function buildFastifyServer(input: BuildFastifyServerInput): FastifyInstance {
-  const app = Fastify({ logger: input.logger });
+  const app = Fastify({ logger: input.logger, bodyLimit: MAX_UPLOAD_BYTES + 1024 * 1024 });
+  void app.register(multipart, { limits: { fileSize: MAX_UPLOAD_BYTES } });
   registerErrorHandler(app);
   registerRoutes(app, input.routes, input.authMiddleware);
   return app;
@@ -49,25 +55,36 @@ async function handleRoute(
   request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<unknown> {
-  const httpReq = await authMiddleware.resolve(
-    toHttpRequest(route.method, request),
-    route.requiresAuth ?? false,
-  );
+  const baseReq: HttpRequest = {
+    method: route.method,
+    path: request.url,
+    params: toStringRecord(request.params),
+    query: toQueryRecord(request.query),
+    // Multipart requests never populate `body` — their content is streamed
+    // into `file` (below), and only after auth passes (see attachMultipartFile).
+    body: route.isMultipart ? undefined : request.body,
+    headers: request.headers,
+  };
+
+  const authedReq = await authMiddleware.resolve(baseReq, route.requiresAuth ?? false);
+  const httpReq = route.isMultipart ? await attachMultipartFile(authedReq, request) : authedReq;
+
   const response = await route.handler.handle(httpReq);
   void reply.status(response.status);
   setHeaders(reply, response.headers);
   return response.body ?? null;
 }
 
-function toHttpRequest(method: HttpMethod, request: FastifyRequest): HttpRequest {
-  return {
-    method,
-    path: request.url,
-    params: toStringRecord(request.params),
-    query: toQueryRecord(request.query),
-    body: request.body,
-    headers: request.headers,
-  };
+/**
+ * Reads the single file part off the multipart stream. Deliberately runs
+ * AFTER `authMiddleware.resolve` in `handleRoute` — an unauthenticated
+ * caller must never make this process stream a (potentially 2GB) upload
+ * before being rejected.
+ */
+async function attachMultipartFile(req: HttpRequest, request: FastifyRequest): Promise<HttpRequest> {
+  const part = await request.file();
+  if (!part) return req;
+  return { ...req, file: { stream: part.file, filename: part.filename } };
 }
 
 function toStringRecord(value: unknown): Record<string, string> {

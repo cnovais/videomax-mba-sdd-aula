@@ -12,6 +12,17 @@ import { LoginHandler } from "./auth/login.handler";
 import { LogoutHandler } from "./auth/logout.handler";
 import { MeHandler } from "./auth/me.handler";
 import { GetHealthHandler } from "./health/get-health.handler";
+import { VideoInMemoryRepository } from "@/infra/repository/video/video.in-memory-repository";
+import { VideoInMemoryQueries } from "@/infra/queries/video/video.in-memory-queries";
+import { InMemoryVideoStorageGateway } from "@/infra/gateway/in-memory-video-storage.gateway";
+import { FakeMediaProbeGateway } from "@/infra/gateway/fake-media-probe.gateway";
+import { FakeThumbnailGateway } from "@/infra/gateway/fake-thumbnail.gateway";
+import { UploadVideoUseCase } from "@/usecase/video/upload-video.usecase";
+import { ListVideosUseCase } from "@/usecase/video/list-videos.usecase";
+import { GetVideoThumbnailUseCase } from "@/usecase/video/get-video-thumbnail.usecase";
+import { UploadHandler } from "./video/upload.handler";
+import { ListHandler } from "./video/list.handler";
+import { ThumbnailHandler } from "./video/thumbnail.handler";
 import { buildHttpRoutes } from "./index";
 import { AuthMiddleware } from "./middleware/auth";
 import { buildFastifyServer } from "./fastify-server";
@@ -28,12 +39,25 @@ function buildTestApp(): FastifyInstance {
   const revokeSession = new RevokeSessionUseCase(sessionRepo, SECRET);
   const resolveSession = new ResolveSessionUseCase(sessionRepo, userRepo, SECRET);
 
+  const videoRepo = new VideoInMemoryRepository();
+  const uploadVideo = new UploadVideoUseCase(
+    videoRepo,
+    new InMemoryVideoStorageGateway(),
+    new FakeMediaProbeGateway(),
+    new FakeThumbnailGateway(),
+  );
+  const listVideos = new ListVideosUseCase(new VideoInMemoryQueries(videoRepo));
+  const getVideoThumbnail = new GetVideoThumbnailUseCase(videoRepo, new InMemoryVideoStorageGateway());
+
   const routes = buildHttpRoutes({
     registerHandler: new RegisterHandler(createUser),
     loginHandler: new LoginHandler(authenticateUser),
     logoutHandler: new LogoutHandler(revokeSession),
     meHandler: new MeHandler(getCurrentUser),
     getHealthHandler: new GetHealthHandler(),
+    uploadHandler: new UploadHandler(uploadVideo),
+    listHandler: new ListHandler(listVideos),
+    thumbnailHandler: new ThumbnailHandler(getVideoThumbnail),
   });
 
   return buildFastifyServer({

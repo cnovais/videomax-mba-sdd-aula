@@ -27,11 +27,8 @@ export class UnsupportedFormatError extends DomainError {
   }
 }
 
-export class FileTooLargeError extends DomainError {
-  readonly code = "FILE_TOO_LARGE";
-  readonly status = 413;
-
-  constructor(sizeBytes: number, maxBytes: number) {
-    super(`Files must be at most 2GB (received ${sizeBytes} bytes, limit ${maxBytes})`);
-  }
-}
+// No FileTooLargeError domain class: the 413 response for an oversized
+// upload is @fastify/multipart's own file-size-limit error (FST_REQ_FILE_
+// TOO_LARGE), mapped inline in infra/http/error-handler.ts — the same
+// pattern already used there for ZodError, which also has no AppError
+// wrapper of its own.

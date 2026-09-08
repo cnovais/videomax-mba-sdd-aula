@@ -6,18 +6,29 @@ import { config } from "@/config/env";
 
 import { UserPrismaRepository } from "@/infra/repository/user/user.prisma-repository";
 import { SessionPrismaRepository } from "@/infra/repository/session/session.prisma-repository";
+import { VideoPrismaRepository } from "@/infra/repository/video/video.prisma-repository";
+import { VideoPrismaQueries } from "@/infra/queries/video/video.prisma-queries";
+import { LocalDiskVideoStorageGateway } from "@/infra/gateway/local-disk-video-storage.gateway";
+import { FfprobeMediaProbeGateway } from "@/infra/gateway/ffprobe-media-probe.gateway";
+import { FfmpegThumbnailGateway } from "@/infra/gateway/ffmpeg-thumbnail.gateway";
 
 import { CreateUserUseCase } from "@/usecase/user/create-user.usecase";
 import { AuthenticateUserUseCase } from "@/usecase/user/authenticate-user.usecase";
 import { GetCurrentUserUseCase } from "@/usecase/user/get-current-user.usecase";
 import { RevokeSessionUseCase } from "@/usecase/session/revoke-session.usecase";
 import { ResolveSessionUseCase } from "@/usecase/session/resolve-session.usecase";
+import { UploadVideoUseCase } from "@/usecase/video/upload-video.usecase";
+import { ListVideosUseCase } from "@/usecase/video/list-videos.usecase";
+import { GetVideoThumbnailUseCase } from "@/usecase/video/get-video-thumbnail.usecase";
 
 import { RegisterHandler } from "@/infra/http/auth/register.handler";
 import { LoginHandler } from "@/infra/http/auth/login.handler";
 import { LogoutHandler } from "@/infra/http/auth/logout.handler";
 import { MeHandler } from "@/infra/http/auth/me.handler";
 import { GetHealthHandler } from "@/infra/http/health/get-health.handler";
+import { UploadHandler } from "@/infra/http/video/upload.handler";
+import { ListHandler } from "@/infra/http/video/list.handler";
+import { ThumbnailHandler } from "@/infra/http/video/thumbnail.handler";
 
 import { buildHttpRoutes } from "@/infra/http/index";
 import { AuthMiddleware } from "@/infra/http/middleware/auth";
@@ -27,9 +38,14 @@ export function bootstrap(): Promise<FastifyInstance> {
   // 1. Singletons
   const prisma = new PrismaClient({ datasources: { db: { url: config.databaseUrl } } });
 
-  // 2. Repositories
+  // 2. Repositories, queries, gateways
   const userRepo = new UserPrismaRepository(prisma);
   const sessionRepo = new SessionPrismaRepository(prisma);
+  const videoRepo = new VideoPrismaRepository(prisma);
+  const videoQueries = new VideoPrismaQueries(prisma);
+  const videoStorage = new LocalDiskVideoStorageGateway(config.storageRoot);
+  const mediaProbe = new FfprobeMediaProbeGateway();
+  const thumbnailGateway = new FfmpegThumbnailGateway();
 
   // 3. Use cases
   const createUser = new CreateUserUseCase(userRepo, sessionRepo, config.sessionSecret);
@@ -37,6 +53,9 @@ export function bootstrap(): Promise<FastifyInstance> {
   const getCurrentUser = new GetCurrentUserUseCase(userRepo);
   const revokeSession = new RevokeSessionUseCase(sessionRepo, config.sessionSecret);
   const resolveSession = new ResolveSessionUseCase(sessionRepo, userRepo, config.sessionSecret);
+  const uploadVideo = new UploadVideoUseCase(videoRepo, videoStorage, mediaProbe, thumbnailGateway);
+  const listVideos = new ListVideosUseCase(videoQueries);
+  const getVideoThumbnail = new GetVideoThumbnailUseCase(videoRepo, videoStorage);
 
   // 4. Handlers
   const registerHandler = new RegisterHandler(createUser);
@@ -44,6 +63,9 @@ export function bootstrap(): Promise<FastifyInstance> {
   const logoutHandler = new LogoutHandler(revokeSession);
   const meHandler = new MeHandler(getCurrentUser);
   const getHealthHandler = new GetHealthHandler();
+  const uploadHandler = new UploadHandler(uploadVideo);
+  const listHandler = new ListHandler(listVideos);
+  const thumbnailHandler = new ThumbnailHandler(getVideoThumbnail);
 
   // 5. Routes + auth middleware
   const routes = buildHttpRoutes({
@@ -52,6 +74,9 @@ export function bootstrap(): Promise<FastifyInstance> {
     logoutHandler,
     meHandler,
     getHealthHandler,
+    uploadHandler,
+    listHandler,
+    thumbnailHandler,
   });
   const authMiddleware = new AuthMiddleware(resolveSession);
 
