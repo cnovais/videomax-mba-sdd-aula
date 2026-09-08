@@ -4,12 +4,15 @@ import type { ReactNode } from "react";
  * Small status/meta pill. Matches
  * docs/design/design-system-pages/components/ui.jsx (VMBadge).
  */
-export type VMBadgeTone = "neutral" | "accent" | "ok";
+export type VMBadgeTone = "neutral" | "accent" | "ok" | "warn" | "err" | "info";
 
 const toneClasses: Record<VMBadgeTone, string> = {
   neutral: "bg-sunken text-ink-2 border-line",
   accent: "bg-accent-lo text-accent-ink border-transparent",
   ok: "bg-ok-bg text-ok border-transparent",
+  warn: "bg-warn-bg text-warn border-transparent",
+  err: "bg-err-bg text-err border-transparent",
+  info: "bg-info-bg text-info border-transparent",
 };
 
 export function VMBadge({
