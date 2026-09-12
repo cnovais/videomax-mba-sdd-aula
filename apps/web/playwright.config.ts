@@ -1,24 +1,25 @@
 import { defineConfig, devices } from "@playwright/test";
+import { BACKEND_PORT, BACKEND_URL, WEB_PORT, WEB_URL } from "./tests/e2e/resolve-ports";
 
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
   reporter: "list",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: WEB_URL,
   },
   webServer: [
     {
       command: "npm run dev",
       cwd: "../backend",
-      port: 4000,
+      port: BACKEND_PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
     {
       command: "npm run build && npm run start",
-      url: "http://localhost:3000",
-      env: { BACKEND_INTERNAL_URL: "http://localhost:4000" },
+      url: WEB_URL,
+      env: { BACKEND_INTERNAL_URL: BACKEND_URL, PORT: String(WEB_PORT) },
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
