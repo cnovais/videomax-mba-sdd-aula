@@ -20,6 +20,10 @@ import { ResolveSessionUseCase } from "@/usecase/session/resolve-session.usecase
 import { UploadVideoUseCase } from "@/usecase/video/upload-video.usecase";
 import { ListVideosUseCase } from "@/usecase/video/list-videos.usecase";
 import { GetVideoThumbnailUseCase } from "@/usecase/video/get-video-thumbnail.usecase";
+import { RenameVideoUseCase } from "@/usecase/video/rename-video.usecase";
+import { UpdateVideoDescriptionUseCase } from "@/usecase/video/update-video-description.usecase";
+import { DeleteVideoUseCase } from "@/usecase/video/delete-video.usecase";
+import { SetLibraryViewModeUseCase } from "@/usecase/user/set-library-view-mode.usecase";
 
 import { RegisterHandler } from "@/infra/http/auth/register.handler";
 import { LoginHandler } from "@/infra/http/auth/login.handler";
@@ -29,6 +33,9 @@ import { GetHealthHandler } from "@/infra/http/health/get-health.handler";
 import { UploadHandler } from "@/infra/http/video/upload.handler";
 import { ListHandler } from "@/infra/http/video/list.handler";
 import { ThumbnailHandler } from "@/infra/http/video/thumbnail.handler";
+import { UpdateHandler } from "@/infra/http/video/update.handler";
+import { DeleteHandler } from "@/infra/http/video/delete.handler";
+import { SetLibraryViewModeHandler } from "@/infra/http/auth/set-library-view-mode.handler";
 
 import { buildHttpRoutes } from "@/infra/http/index";
 import { AuthMiddleware } from "@/infra/http/middleware/auth";
@@ -56,6 +63,10 @@ export function bootstrap(): Promise<FastifyInstance> {
   const uploadVideo = new UploadVideoUseCase(videoRepo, videoStorage, mediaProbe, thumbnailGateway);
   const listVideos = new ListVideosUseCase(videoQueries);
   const getVideoThumbnail = new GetVideoThumbnailUseCase(videoRepo, videoStorage);
+  const renameVideo = new RenameVideoUseCase(videoRepo);
+  const updateVideoDescription = new UpdateVideoDescriptionUseCase(videoRepo);
+  const deleteVideo = new DeleteVideoUseCase(videoRepo, videoStorage);
+  const setLibraryViewMode = new SetLibraryViewModeUseCase(userRepo);
 
   // 4. Handlers
   const registerHandler = new RegisterHandler(createUser);
@@ -66,6 +77,9 @@ export function bootstrap(): Promise<FastifyInstance> {
   const uploadHandler = new UploadHandler(uploadVideo);
   const listHandler = new ListHandler(listVideos);
   const thumbnailHandler = new ThumbnailHandler(getVideoThumbnail);
+  const updateHandler = new UpdateHandler(renameVideo, updateVideoDescription);
+  const deleteHandler = new DeleteHandler(deleteVideo);
+  const setLibraryViewModeHandler = new SetLibraryViewModeHandler(setLibraryViewMode);
 
   // 5. Routes + auth middleware
   const routes = buildHttpRoutes({
@@ -77,6 +91,9 @@ export function bootstrap(): Promise<FastifyInstance> {
     uploadHandler,
     listHandler,
     thumbnailHandler,
+    updateHandler,
+    deleteHandler,
+    setLibraryViewModeHandler,
   });
   const authMiddleware = new AuthMiddleware(resolveSession);
 
