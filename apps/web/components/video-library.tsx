@@ -1,94 +1,17 @@
 "use client";
-
-import { useCallback, useEffect, useState } from "react";
-import { UploadClient, type UploadProgress, type UploadedVideo } from "@/lib/upload-client";
+import { useState } from "react";
+import { UploadClient, type UploadProgress } from "@/lib/upload-client";
 import { UploadDropzone } from "@/components/upload-dropzone";
 import { UploadProgressCard } from "@/components/upload-progress-card";
 import { VideoList } from "@/components/video-list";
 import { Toast } from "@/components/toast";
-
-const TOAST_DURATION_MS = 5000;
-
-/**
- * Orchestrates the upload queue and the video list together — a new
- * upload's completion must be reflected in the list without a full page
- * reload, and browsing the list must stay usable while an upload runs
- * (PRD: "user can continue browsing the library while the upload is in
- * progress").
- */
-export function VideoLibrary({ initialVideos }: { initialVideos: UploadedVideo[] }) {
-  const [videos, setVideos] = useState<UploadedVideo[]>(initialVideos);
-  const [uploads, setUploads] = useState<Map<File, UploadProgress>>(new Map());
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  // Lazy `useState` initializer (not a ref written during render) — the
-  // recommended way to construct a value once and keep it stable across
-  // re-renders. Callbacks close over the setState functions, which React
-  // guarantees are stable identities.
-  const [uploadClient] = useState(
-    () =>
-      new UploadClient({
-        onRejected: (_file, message) => setToastMessage(message),
-        onProgress: (progress) => {
-          setUploads((prev) => new Map(prev).set(progress.file, progress));
-        },
-        onCompleted: (file, video) => {
-          setUploads((prev) => {
-            const next = new Map(prev);
-            next.delete(file);
-            return next;
-          });
-          setVideos((prev) => [video, ...prev]);
-        },
-        onFailed: (file, message) => {
-          setUploads((prev) => {
-            const next = new Map(prev);
-            const existing = next.get(file);
-            next.set(file, {
-              // `onProgress` always fires before `onFailed` for the same file,
-              // so `existing.id` is present; the fallback only guards an
-              // otherwise-unreachable ordering.
-              id: existing?.id ?? `${file.name}-${file.lastModified}`,
-              file,
-              loaded: existing?.loaded ?? 0,
-              total: existing?.total ?? file.size,
-              state: "error",
-              errorMessage: message,
-            });
-            return next;
-          });
-          setToastMessage(message);
-        },
-      }),
-  );
-
-  const handleFilesSelected = useCallback(
-    (files: FileList) => {
-      for (const file of Array.from(files)) uploadClient.enqueue(file);
-    },
-    [uploadClient],
-  );
-
-  useEffect(() => {
-    if (!toastMessage) return;
-    const timeout = setTimeout(() => setToastMessage(null), TOAST_DURATION_MS);
-    return () => clearTimeout(timeout);
-  }, [toastMessage]);
-
-  return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-10">
-      <UploadDropzone onFilesSelected={handleFilesSelected} />
-
-      {uploads.size > 0 ? (
-        <div className="flex flex-col gap-2" data-testid="upload-queue">
-          {Array.from(uploads.values()).map((progress) => (
-            <UploadProgressCard key={progress.id} progress={progress} />
-          ))}
-        </div>
-      ) : null}
-
-      <VideoList videos={videos} />
-
-      {toastMessage ? <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} /> : null}
-    </div>
-  );
+import { deleteVideo, updateVideo, updateViewMode, type VideoItem, type VideoSort } from "@/lib/video-client";
+export function VideoLibrary({ initialVideos, initialViewMode = "grid" }: { initialVideos: VideoItem[]; initialViewMode?: "grid" | "list" }) {
+  const [videos, setVideos] = useState<VideoItem[]>(initialVideos); const [viewMode, setViewMode] = useState(initialViewMode); const [sort, setSort] = useState<VideoSort>("recent"); const [toast, setToast] = useState<string | null>(null); const [uploads, setUploads] = useState<Map<File, UploadProgress>>(new Map()); const [editing, setEditing] = useState<VideoItem | null>(null); const [description, setDescription] = useState<VideoItem | null>(null); const [deleting, setDeleting] = useState<VideoItem | null>(null); const [deleteReady, setDeleteReady] = useState(false);
+  const [client] = useState(() => new UploadClient({ onRejected: (_f, m) => setToast(m), onProgress: (p) => setUploads((x) => new Map(x).set(p.file, p)), onCompleted: (_f, v) => setVideos((x) => [v as VideoItem, ...x]), onFailed: (_f, m) => setToast(m) }));
+  async function saveTitle(): Promise<void> { if (!editing) return; const value = window.prompt("Title", editing.title) ?? ""; if (!value.trim()) { setToast("Title cannot be empty"); return; } const r = await updateVideo(editing.id, { title: value }); if (!r.ok) { setToast("Title cannot be empty"); return; } const result = (await r.json()) as { title: string }; setVideos((x) => x.map((v) => v.id === editing.id ? { ...v, title: result.title } : v)); setEditing(null); }
+  async function saveDescription(): Promise<void> { if (!description) return; const value = window.prompt("Description", description.description) ?? ""; const r = await updateVideo(description.id, { description: value }); if (r.ok) { setVideos((x) => x.map((v) => v.id === description.id ? { ...v, description: value } : v)); setDescription(null); } }
+  async function confirmDelete(): Promise<void> { if (!deleting || !deleteReady) return; const id = deleting.id; const r = await deleteVideo(id); if (r.ok) setVideos((x) => x.filter((v) => v.id !== id)); setDeleting(null); }
+  function openDelete(video: VideoItem): void { setDeleting(video); setDeleteReady(false); setTimeout(() => setDeleteReady(true), 1000); }
+  return <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-10"><UploadDropzone onFilesSelected={(files) => Array.from(files).forEach((f) => client.enqueue(f))} />{uploads.size > 0 && <div data-testid="upload-queue">{Array.from(uploads.values()).map((p) => <UploadProgressCard key={p.id} progress={p} />)}</div>}<div className="flex items-center justify-between"><div className="flex gap-2"><button type="button" aria-label="Grid view" onClick={() => { setViewMode("grid"); void updateViewMode("grid"); }}>Grid</button><button type="button" aria-label="List view" onClick={() => { setViewMode("list"); void updateViewMode("list"); }}>List</button></div><label>Sort <select value={sort} onChange={(e) => setSort(e.target.value as VideoSort)}><option value="recent">Most recent</option><option value="oldest">Oldest</option><option value="title">Title</option></select></label></div><VideoList videos={videos} viewMode={viewMode} onRename={setEditing} onDescription={setDescription} onDelete={openDelete} />{editing && <div role="dialog"><p>Rename video</p><button type="button" onClick={() => void saveTitle()}>Save</button><button type="button" onClick={() => setEditing(null)}>Cancel</button></div>}{description && <div role="dialog"><p>Edit description</p><button type="button" onClick={() => void saveDescription()}>Save</button><button type="button" onClick={() => setDescription(null)}>Cancel</button></div>}{deleting && <div role="dialog"><p>{`Delete '${deleting.title}'? This cannot be undone.`}</p><button type="button" disabled={!deleteReady} onClick={() => void confirmDelete()}>Delete</button><button type="button" onClick={() => setDeleting(null)}>Cancel</button></div>}{toast && <Toast message={toast} onDismiss={() => setToast(null)} />}</div>;
 }

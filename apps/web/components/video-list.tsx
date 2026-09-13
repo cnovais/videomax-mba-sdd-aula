@@ -1,79 +1,9 @@
-import { memo } from "react";
-import type { UploadedVideo } from "@/lib/upload-client";
+"use client";
+import type { VideoItem } from "@/lib/video-client";
 import { formatBytes } from "@/lib/format-bytes";
 import { VMBadge, type VMBadgeTone } from "@/components/vm-badge";
-
-const STATUS_META: Record<string, { label: string; tone: VMBadgeTone }> = {
-  validating: { label: "Validating", tone: "info" },
-  transcribing: { label: "Transcribing", tone: "warn" },
-  summarizing: { label: "Summarizing", tone: "accent" },
-  ready: { label: "Ready", tone: "ok" },
-  failed: { label: "Failed", tone: "err" },
-};
-
-/**
- * The backend returns `thumbnailUrl` as a backend-relative path (e.g.
- * `/videos/{id}/thumbnail`) — it has no notion of this app's `/api` proxy
- * prefix. Only `apps/web/app/api/videos/[id]/thumbnail/route.ts` is
- * actually registered as a Next.js route, so every rendered `<img>` must
- * go through that prefix.
- */
-function thumbnailSrc(thumbnailUrl: string | null): string {
-  return thumbnailUrl ? `/api${thumbnailUrl}` : "/video-placeholder.svg";
+const STATUS: Record<string, { label: string; tone: VMBadgeTone }> = { validating: { label: "Validating", tone: "info" }, transcribing: { label: "Transcribing", tone: "warn" }, summarizing: { label: "Summarizing", tone: "accent" }, ready: { label: "Ready", tone: "ok" }, failed: { label: "Failed", tone: "err" } };
+export function VideoList({ videos, viewMode, onRename, onDescription, onDelete }: { videos: VideoItem[]; viewMode: "grid" | "list"; onRename: (v: VideoItem) => void; onDescription: (v: VideoItem) => void; onDelete: (v: VideoItem) => void }) {
+  if (videos.length === 0) return <p className="text-sm text-ink-2" data-testid="video-list-empty">Upload your first video to get started.</p>;
+  return <div className={viewMode === "grid" ? "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4" : "flex flex-col gap-2"} data-testid="video-list">{videos.map((video) => { const status = STATUS[video.status] ?? { label: video.status, tone: "neutral" as VMBadgeTone }; const image = video.thumbnailUrl ? `/api${video.thumbnailUrl}` : "/video-placeholder.svg"; return <article key={video.id} data-testid="video-card" data-video-id={video.id} className={viewMode === "grid" ? "overflow-hidden rounded-lg border border-line bg-surface shadow-[var(--shadow-vm-sm)]" : "flex items-center gap-4 rounded-lg border border-line bg-surface p-3"}><img src={image} alt="" className={viewMode === "grid" ? "aspect-video h-full w-full object-cover" : "h-16 w-28 rounded object-cover"} /><div className="min-w-0 flex-1 p-3"><div className="flex items-start justify-between gap-2"><h3 className="truncate text-sm font-medium text-ink">{video.title}</h3><VMBadge tone={status.tone}>{status.label}</VMBadge></div><p className="truncate text-xs text-ink-2">{video.description || "No description"}</p><p className="text-xs text-ink-2">{Math.round(video.durationSeconds)}s · {formatBytes(video.sizeBytes)} · {new Date(video.uploadedAt).toLocaleDateString()}</p><div className="mt-2 flex gap-2 text-xs"><button type="button" onClick={() => onRename(video)}>Rename</button><button type="button" onClick={() => onDescription(video)}>Edit description</button><button type="button" onClick={() => onDelete(video)}>Delete</button></div></div></article>; })}</div>;
 }
-
-/**
- * Minimal placeholder library grid — this feature's own deliverable so
- * its "video appears in the library" ACs are verifiable ahead of F04
- * (the real Video Library, which replaces this with sort/filter/rename/
- * delete). See spec's Technical Decisions.
- *
- * Memoized: `videos` only changes on upload completion, not on every
- * progress tick — without this, the whole grid (every thumbnail `<img>`)
- * would re-render on each `xhr.upload.onprogress` event from an unrelated
- * in-flight upload.
- */
-export const VideoList = memo(function VideoList({ videos }: { videos: UploadedVideo[] }) {
-  if (videos.length === 0) {
-    return (
-      <p className="text-sm text-ink-2" data-testid="video-list-empty">
-        Upload your first video to get started.
-      </p>
-    );
-  }
-
-  return (
-    <div
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
-      data-testid="video-list"
-    >
-      {videos.map((video) => {
-        const status = STATUS_META[video.status] ?? { label: video.status, tone: "neutral" as VMBadgeTone };
-        return (
-          <div
-            key={video.id}
-            className="overflow-hidden rounded-lg border border-line bg-surface shadow-[var(--shadow-vm-sm)]"
-            data-testid="video-card"
-            data-video-id={video.id}
-          >
-            <div className="relative aspect-video bg-sunken">
-              {/* eslint-disable-next-line @next/next/no-img-element -- dynamically generated, not a static asset */}
-              <img
-                src={thumbnailSrc(video.thumbnailUrl)}
-                alt=""
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute left-2 top-2">
-                <VMBadge tone={status.tone}>{status.label}</VMBadge>
-              </div>
-            </div>
-            <div className="p-2">
-              <p className="truncate text-sm font-medium text-ink">{video.title}</p>
-              <p className="text-xs text-ink-2">{formatBytes(video.sizeBytes)}</p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-});
