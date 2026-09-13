@@ -1,5 +1,7 @@
 import { VideoId } from "./video-id.vo";
 import { VideoStatus } from "./video-status.vo";
+import { VideoTitle } from "./video-title.vo";
+import { VideoDescription } from "./video-description.vo";
 
 export type CreateVideoProps = {
   userId: string;
@@ -132,6 +134,12 @@ export class Video {
 
   get uploadedAt(): Date {
     return this._uploadedAt;
+  }
+
+  rename(title: string): Video { return this.copy({ title: VideoTitle.create(title).value }); }
+  updateDescription(description: string): Video { return this.copy({ description: VideoDescription.create(description).value }); }
+  private copy(changes: { title?: string; description?: string }): Video {
+    return Video.restore({ id: this.id, userId: this.userId, title: changes.title ?? this.title, description: changes.description ?? this.description, originalFilename: this.originalFilename, storageKey: this.storageKey, sizeBytes: this.sizeBytes, durationSeconds: this.durationSeconds, containerFormat: this.containerFormat, status: this.status, thumbnailPath: this.thumbnailPath, uploadedAt: this.uploadedAt });
   }
 
   toJSON(): never {

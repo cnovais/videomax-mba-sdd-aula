@@ -39,3 +39,9 @@ export class UserAlreadyExistsError extends ConflictError {
     super(`User already exists: ${email}`);
   }
 }
+
+export class InvalidLibraryViewModeError extends DomainError {
+  readonly code = "INVALID_LIBRARY_VIEW_MODE";
+  readonly status = 422;
+  constructor(value: string) { super(`Invalid library view mode: "${value}"`); }
+}

@@ -16,6 +16,7 @@ model User {
   isSuspended    Boolean   @default(false)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  libraryViewMode String   @default("grid")
   sessions       Session[]
   videos         Video[]
 

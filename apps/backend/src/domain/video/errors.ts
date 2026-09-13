@@ -36,6 +36,18 @@ export class MissingFilePartError extends DomainError {
   }
 }
 
+export class InvalidTitleError extends DomainError {
+  readonly code = "INVALID_TITLE";
+  readonly status = 422;
+  constructor(value: string) { super(`Title must contain 1 to 200 characters: "${value}"`); }
+}
+
+export class DescriptionTooLongError extends DomainError {
+  readonly code = "DESCRIPTION_TOO_LONG";
+  readonly status = 422;
+  constructor(value: string) { super(`Description must contain at most 2000 characters: "${value}"`); }
+}
+
 // No FileTooLargeError domain class: the 413 response for an oversized
 // upload is @fastify/multipart's own file-size-limit error (FST_REQ_FILE_
 // TOO_LARGE), mapped inline in infra/http/error-handler.ts — the same
