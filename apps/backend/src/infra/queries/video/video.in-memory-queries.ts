@@ -1,21 +1,22 @@
 import type { PageInput, PageOutput } from "@/domain/_shared/pagination";
-import type { VideoListItem, VideoQueries } from "@/domain/video/video.queries";
+import type { VideoListItem, VideoQueries, VideoSort } from "@/domain/video/video.queries";
 import type { VideoInMemoryRepository } from "@/infra/repository/video/video.in-memory-repository";
 
 /** LSP-substitutable fake — reads from the same in-memory repository store. */
 export class VideoInMemoryQueries implements VideoQueries {
   constructor(private readonly repo: VideoInMemoryRepository) {}
 
-  listByUser(userId: string, page: PageInput): Promise<PageOutput<VideoListItem>> {
+  listByUser(userId: string, page: PageInput, sort: VideoSort): Promise<PageOutput<VideoListItem>> {
     const all = this.repo
       .all()
       .filter((video) => video.userId === userId)
-      .sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime());
+      .sort((a, b) => sort === "title" ? a.title.localeCompare(b.title) : (sort === "oldest" ? a.uploadedAt.getTime() - b.uploadedAt.getTime() : b.uploadedAt.getTime() - a.uploadedAt.getTime()));
 
     const start = (page.page - 1) * page.pageSize;
     const items = all.slice(start, start + page.pageSize).map((video) => ({
       id: video.id,
       title: video.title,
+      description: video.description,
       status: video.status,
       thumbnailPath: video.thumbnailPath,
       sizeBytes: video.sizeBytes,
