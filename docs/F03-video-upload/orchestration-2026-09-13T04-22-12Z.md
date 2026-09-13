@@ -84,6 +84,8 @@
 
 The evaluator returned `clean` on the first cycle: 11/11 contract items PASS, 7/7 in-scope PRD acceptance criteria verified. The only obstacle from the two prior runs — no browser-automation driver available to exercise UI/E2E items — was discharged this run: the cycle-0 `implement-feature` step manually re-verified the previously-BLOCKED behaviors using the project's own already-established Playwright dependency, and the independent `evaluator` invocation (run fresh, not trusting that finding) confirmed all UI/E2E items PASS using the same tooling. No fix cycle was needed.
 
+**Pull request:** [#4](https://github.com/cnovais/videomax-mba-sdd-aula/pull/4) (`f03` → `main`)
+
 ---
 
 ## Soft-fails (run-level)
