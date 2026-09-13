@@ -21,8 +21,19 @@ export class VideoInMemoryQueries implements VideoQueries {
       sizeBytes: video.sizeBytes,
       durationSeconds: video.durationSeconds,
       uploadedAt: video.uploadedAt,
+      attemptCount: video.attemptCount,
+      failureReason: video.failureReason,
     }));
 
     return Promise.resolve({ items, page: page.page, pageSize: page.pageSize, total: all.length });
+  }
+
+  findDue(limit: number, now: Date) {
+    return Promise.resolve(this.repo.all().filter((video) => !["ready", "failed"].includes(video.status) && (video.nextAttemptAt?.getTime() ?? 0) <= now.getTime()).slice(0, limit));
+  }
+
+  processingStatus(id: string) {
+    const video = this.repo.all().find((candidate) => candidate.id === id);
+    return Promise.resolve(video ? { status: video.status, attemptCount: video.attemptCount } : null);
   }
 }

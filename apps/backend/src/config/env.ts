@@ -7,6 +7,9 @@ const schema = z.object({
   databaseUrl: z.string().url(),
   sessionSecret: z.string().min(1),
   storageRoot: z.string().default("./storage"),
+  openaiApiKey: z.string().default(""),
+  pipelinePollIntervalMs: z.coerce.number().int().positive().default(5000),
+  pipelineWorkerConcurrency: z.coerce.number().int().positive().default(2),
 });
 
 const parsed = schema.safeParse({
@@ -15,6 +18,9 @@ const parsed = schema.safeParse({
   databaseUrl: process.env["DATABASE_URL"],
   sessionSecret: process.env["SESSION_SECRET"],
   storageRoot: process.env["STORAGE_ROOT"],
+  openaiApiKey: process.env["OPENAI_API_KEY"],
+  pipelinePollIntervalMs: process.env["PIPELINE_POLL_INTERVAL_MS"],
+  pipelineWorkerConcurrency: process.env["PIPELINE_WORKER_CONCURRENCY"],
 });
 
 if (!parsed.success) {

@@ -1,0 +1,2 @@
+import type { TranscriptionGateway, TranscriptionResult } from "@/domain/video/transcription.gateway";
+export class FakeTranscriptionGateway implements TranscriptionGateway { constructor(private readonly result: TranscriptionResult = { language: "en", segments: [{ startSeconds: 0, endSeconds: 1, text: "Example transcript" }] }) {} transcribe(_audioPath: string) { return Promise.resolve(this.result); } }

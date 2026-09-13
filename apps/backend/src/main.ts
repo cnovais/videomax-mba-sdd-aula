@@ -29,6 +29,16 @@ import { GetHealthHandler } from "@/infra/http/health/get-health.handler";
 import { UploadHandler } from "@/infra/http/video/upload.handler";
 import { ListHandler } from "@/infra/http/video/list.handler";
 import { ThumbnailHandler } from "@/infra/http/video/thumbnail.handler";
+import { RetryHandler } from "@/infra/http/video/retry.handler";
+import { TranscriptionPrismaRepository } from "@/infra/repository/transcription/transcription.prisma-repository";
+import { SummaryPrismaRepository } from "@/infra/repository/summary/summary.prisma-repository";
+import { FfmpegAudioExtractionGateway } from "@/infra/gateway/ffmpeg-audio-extraction.gateway";
+import { OpenAiWhisperTranscriptionGateway } from "@/infra/gateway/openai-whisper-transcription.gateway";
+import { OpenAiSummaryGateway } from "@/infra/gateway/openai-summary.gateway";
+import { RunVideoStageUseCase } from "@/usecase/pipeline/run-video-stage.usecase";
+import { ProcessPendingVideosUseCase } from "@/usecase/pipeline/process-pending-videos.usecase";
+import { RetryVideoUseCase } from "@/usecase/pipeline/retry-video.usecase";
+import { PipelineWorker } from "@/infra/worker/pipeline-worker";
 
 import { buildHttpRoutes } from "@/infra/http/index";
 import { AuthMiddleware } from "@/infra/http/middleware/auth";
@@ -46,6 +56,10 @@ export function bootstrap(): Promise<FastifyInstance> {
   const videoStorage = new LocalDiskVideoStorageGateway(config.storageRoot);
   const mediaProbe = new FfprobeMediaProbeGateway();
   const thumbnailGateway = new FfmpegThumbnailGateway();
+  const transcriptionRepo = new TranscriptionPrismaRepository(prisma);
+  const summaryRepo = new SummaryPrismaRepository(prisma);
+  const runStage = new RunVideoStageUseCase(videoRepo, videoStorage, mediaProbe, new FfmpegAudioExtractionGateway(), new OpenAiWhisperTranscriptionGateway(config.openaiApiKey), transcriptionRepo, new OpenAiSummaryGateway(config.openaiApiKey), summaryRepo);
+  const worker = new PipelineWorker(new ProcessPendingVideosUseCase(videoQueries, runStage, config.pipelineWorkerConcurrency), config.pipelinePollIntervalMs);
 
   // 3. Use cases
   const createUser = new CreateUserUseCase(userRepo, sessionRepo, config.sessionSecret);
@@ -66,6 +80,7 @@ export function bootstrap(): Promise<FastifyInstance> {
   const uploadHandler = new UploadHandler(uploadVideo);
   const listHandler = new ListHandler(listVideos);
   const thumbnailHandler = new ThumbnailHandler(getVideoThumbnail);
+  const retryHandler = new RetryHandler(new RetryVideoUseCase(videoRepo));
 
   // 5. Routes + auth middleware
   const routes = buildHttpRoutes({
@@ -77,12 +92,15 @@ export function bootstrap(): Promise<FastifyInstance> {
     uploadHandler,
     listHandler,
     thumbnailHandler,
+    retryHandler,
   });
   const authMiddleware = new AuthMiddleware(resolveSession);
 
   // 6. Server
   const app = buildFastifyServer({ routes, authMiddleware, logger: { level: config.logLevel } });
   app.addHook("onClose", () => prisma.$disconnect());
+  app.addHook("onReady", () => worker.start());
+  app.addHook("onClose", () => worker.stop());
 
   return Promise.resolve(app);
 }

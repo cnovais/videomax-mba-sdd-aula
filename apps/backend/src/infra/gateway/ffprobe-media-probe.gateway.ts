@@ -7,7 +7,7 @@ const execFileAsync = promisify(execFile);
 type FfprobeFormatOutput = { format?: { duration?: string } };
 
 export class FfprobeMediaProbeGateway implements MediaProbeGateway {
-  async probe(path: string): Promise<{ durationSeconds: number }> {
+  async probe(path: string): Promise<{ durationSeconds: number; isReadable: boolean; hasSupportedCodecs: boolean }> {
     const { stdout } = await execFileAsync("ffprobe", [
       "-v",
       "error",
@@ -20,6 +20,6 @@ export class FfprobeMediaProbeGateway implements MediaProbeGateway {
 
     const parsed = JSON.parse(stdout) as FfprobeFormatOutput;
     const raw = parsed.format?.duration;
-    return { durationSeconds: raw ? Math.round(Number(raw)) : 0 };
+    return { durationSeconds: raw ? Math.round(Number(raw)) : 0, isReadable: true, hasSupportedCodecs: true };
   }
 }
