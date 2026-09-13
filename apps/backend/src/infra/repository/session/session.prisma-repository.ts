@@ -24,4 +24,5 @@ export class SessionPrismaRepository implements SessionRepository {
     // deleteMany (not delete) so an unknown digest is a no-op, not a thrown error — idempotent.
     await this.prisma.session.deleteMany({ where: { tokenHash: tokenDigest } });
   }
+  async deleteAllByUserId(userId: string): Promise<void> { await this.prisma.session.deleteMany({ where: { userId } }); }
 }

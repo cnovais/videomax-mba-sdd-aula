@@ -12,4 +12,5 @@ export type VideoListItem = {
 
 export interface VideoQueries {
   listByUser(userId: string, page: PageInput): Promise<PageOutput<VideoListItem>>;
+  countAll(): Promise<number>;
 }

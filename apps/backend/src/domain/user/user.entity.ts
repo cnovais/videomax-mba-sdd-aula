@@ -16,6 +16,7 @@ export type RestoreUserProps = {
   isAdmin: boolean;
   isSuspended: boolean;
   createdAt: Date;
+  lastLoginAt?: Date | null;
 };
 
 export class User {
@@ -27,6 +28,7 @@ export class User {
     private readonly _isAdmin: boolean,
     private readonly _isSuspended: boolean,
     private readonly _createdAt: Date,
+    private readonly _lastLoginAt: Date | null,
   ) {}
 
   /**
@@ -45,6 +47,7 @@ export class User {
       false,
       false,
       new Date(),
+      null,
     );
   }
 
@@ -58,7 +61,20 @@ export class User {
       props.isAdmin,
       props.isSuspended,
       props.createdAt,
+      props.lastLoginAt ?? null,
     );
+  }
+
+  suspend(): User { return this.copy({ isSuspended: true }); }
+  reactivate(): User { return this.copy({ isSuspended: false }); }
+  recordLogin(at: Date = new Date()): User { return this.copy({ lastLoginAt: at }); }
+  assertIsAdmin(): void {
+    if (!this._isAdmin) throw new Error(`User ${this.id} is not an administrator`);
+  }
+
+  private copy(changes: { isSuspended?: boolean; lastLoginAt?: Date | null }): User {
+    return new User(this._id, this._name, this._email, this._hashedPassword, this._isAdmin,
+      changes.isSuspended ?? this._isSuspended, this._createdAt, changes.lastLoginAt ?? this._lastLoginAt);
   }
 
   verifyPassword(rawPassword: string): boolean {
@@ -92,6 +108,8 @@ export class User {
   get createdAt(): Date {
     return this._createdAt;
   }
+
+  get lastLoginAt(): Date | null { return this._lastLoginAt; }
 
   toJSON(): never {
     throw new Error("Do not serialize Entity directly. Use toOutput() in the use case DTO.");

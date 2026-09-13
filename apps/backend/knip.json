@@ -7,6 +7,8 @@
     "src/infra/http/handler.ts",
     "src/infra/http/middleware/**",
     "src/infra/http/index.ts"
+    ,"src/infra/queries/user/user.in-memory-queries.ts"
+    ,"src/usecase/user/*.dto.ts"
   ],
   "ignoreBinaries": ["eslint", "tsc", "tsx", "vitest", "prisma", "depcruise", "madge", "knip"],
   "ignoreDependencies": ["eslint", "madge", "tsx", "prisma", "dependency-cruiser", "knip"],

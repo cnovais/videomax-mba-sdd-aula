@@ -1,4 +1,5 @@
 import { UnauthenticatedError } from "@/domain/_shared/errors";
+import { AccountSuspendedError } from "@/domain/user/errors";
 import type { UserRepository } from "@/domain/user/user.repository";
 import { Session } from "@/domain/session/session.entity";
 import type { SessionRepository } from "@/domain/session/session.repository";
@@ -20,13 +21,16 @@ export class AuthenticateUserUseCase {
     const normalizedEmail = input.email.trim().toLowerCase();
     const user = await this.userRepo.findByEmail(normalizedEmail);
 
+    if (user?.isSuspended) throw new AccountSuspendedError();
     if (!user || !user.verifyPassword(input.password)) {
       throw new UnauthenticatedError("Invalid email or password");
     }
+    const loggedInUser = user.recordLogin();
+    await this.userRepo.save(loggedInUser);
 
     const session = Session.create({ userId: user.id, secret: this.sessionSecret });
     await this.sessionRepo.save(session);
 
-    return toOutput(user, session.rawToken as string);
+    return toOutput(loggedInUser, session.rawToken as string);
   }
 }

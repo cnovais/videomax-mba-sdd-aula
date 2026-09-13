@@ -25,4 +25,5 @@ export class VideoInMemoryQueries implements VideoQueries {
 
     return Promise.resolve({ items, page: page.page, pageSize: page.pageSize, total: all.length });
   }
+  countAll(): Promise<number> { return Promise.resolve(this.repo.all().length); }
 }

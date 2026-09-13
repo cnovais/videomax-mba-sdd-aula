@@ -18,4 +18,8 @@ export class SessionInMemoryRepository implements SessionRepository {
     this.sessionsByDigest.delete(tokenDigest);
     return Promise.resolve();
   }
+  deleteAllByUserId(userId: string): Promise<void> {
+    for (const [digest, session] of this.sessionsByDigest) if (session.userId === userId) this.sessionsByDigest.delete(digest);
+    return Promise.resolve();
+  }
 }

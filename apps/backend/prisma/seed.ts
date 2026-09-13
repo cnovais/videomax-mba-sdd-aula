@@ -12,6 +12,8 @@
  */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { copyFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
 
 const prisma = new PrismaClient();
 
@@ -24,9 +26,9 @@ const FIXTURE_USER = {
 
 /** Admin fixture account. */
 const ADMIN_USER = {
-  name: "Admin",
-  email: "admin@admin.com",
-  password: "Admin1234",
+  name: "Existing Admin",
+  email: "admin@example.com",
+  password: "ValidPass123",
   isAdmin: true,
 };
 
@@ -56,6 +58,26 @@ async function seedUser(user: typeof FIXTURE_USER): Promise<void> {
 async function main(): Promise<void> {
   await seedUser(FIXTURE_USER);
   await seedUser(ADMIN_USER);
+  await seedUser({ name: "Second Admin", email: "second-admin@example.com", password: "ValidPass123", isAdmin: true });
+  await seedUser({ name: "Suspend Target", email: "suspend-target@example.com", password: "ValidPass123", isAdmin: false });
+  await seedUser({ name: "Delete Target", email: "delete-target@example.com", password: "ValidPass123", isAdmin: false });
+  await seedUser({ name: "Searchable Sam", email: "searchable.sam@example.com", password: "ValidPass123", isAdmin: false });
+  for (let index = 1; index <= 50; index += 1) {
+    const value = String(index).padStart(3, "0");
+    await seedUser({ name: `Bulk User ${value}`, email: `bulk-user-${value}@example.com`, password: "ValidPass123", isAdmin: false });
+  }
+  const deleteTarget = await prisma.user.findUniqueOrThrow({ where: { email: "delete-target@example.com" } });
+  const storageRoot = process.env["STORAGE_ROOT"] ?? "./storage";
+  await mkdir(join(storageRoot, "videos"), { recursive: true });
+  await mkdir(join(storageRoot, "thumbnails"), { recursive: true });
+  await copyFile(join(process.cwd(), "../../video-samples/tiny-valid.mp4"), join(storageRoot, "videos/delete-target-a.mp4"));
+  await copyFile(join(process.cwd(), "../../video-samples/tiny-valid.mp4"), join(storageRoot, "videos/delete-target-b.mp4"));
+  await copyFile(join(process.cwd(), "../../video-samples/tiny-valid.mp4"), join(storageRoot, "thumbnails/delete-target-a.jpg"));
+  await prisma.video.deleteMany({ where: { userId: deleteTarget.id } });
+  await prisma.video.createMany({ data: [
+    { userId: deleteTarget.id, title: "Delete Target Clip A", originalFilename: "a.mp4", storageKey: "videos/delete-target-a.mp4", sizeBytes: 100, durationSeconds: 3, containerFormat: "mp4", status: "ready", thumbnailPath: "thumbnails/delete-target-a.jpg" },
+    { userId: deleteTarget.id, title: "Delete Target Clip B", originalFilename: "b.mp4", storageKey: "videos/delete-target-b.mp4", sizeBytes: 100, durationSeconds: 3, containerFormat: "mp4", status: "validating" },
+  ] });
 }
 
 main()

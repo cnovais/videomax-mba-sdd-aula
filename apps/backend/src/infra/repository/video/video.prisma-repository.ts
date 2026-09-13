@@ -19,4 +19,9 @@ export class VideoPrismaRepository implements VideoRepository {
       update: data,
     });
   }
+  async delete(id: string): Promise<void> { await this.prisma.video.deleteMany({ where: { id } }); }
+  async findAllByUserId(userId: string): Promise<Video[]> {
+    const rows = await this.prisma.video.findMany({ where: { userId } });
+    return rows.map((row) => VideoMapper.toDomain(row));
+  }
 }

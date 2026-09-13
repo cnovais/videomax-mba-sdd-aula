@@ -32,4 +32,5 @@ export class VideoPrismaQueries implements VideoQueries {
       total,
     };
   }
+  countAll(): Promise<number> { return this.prisma.video.count(); }
 }

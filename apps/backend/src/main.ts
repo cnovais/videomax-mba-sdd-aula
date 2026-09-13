@@ -29,6 +29,9 @@ import { GetHealthHandler } from "@/infra/http/health/get-health.handler";
 import { UploadHandler } from "@/infra/http/video/upload.handler";
 import { ListHandler } from "@/infra/http/video/list.handler";
 import { ThumbnailHandler } from "@/infra/http/video/thumbnail.handler";
+import { UserPrismaQueries } from "@/infra/queries/user/user.prisma-queries";
+import { GetAdminOverviewUseCase } from "@/usecase/user/get-admin-overview.usecase"; import { ListUsersForAdminUseCase } from "@/usecase/user/list-users-for-admin.usecase"; import { SuspendUserUseCase } from "@/usecase/user/suspend-user.usecase"; import { ReactivateUserUseCase } from "@/usecase/user/reactivate-user.usecase"; import { DeleteUserUseCase } from "@/usecase/user/delete-user.usecase";
+import { AdminOverviewHandler } from "@/infra/http/admin/get-overview.handler"; import { AdminListHandler } from "@/infra/http/admin/list-users.handler"; import { AdminSuspendHandler } from "@/infra/http/admin/suspend-user.handler"; import { AdminReactivateHandler } from "@/infra/http/admin/reactivate-user.handler"; import { AdminDeleteHandler } from "@/infra/http/admin/delete-user.handler";
 
 import { buildHttpRoutes } from "@/infra/http/index";
 import { AuthMiddleware } from "@/infra/http/middleware/auth";
@@ -43,6 +46,7 @@ export function bootstrap(): Promise<FastifyInstance> {
   const sessionRepo = new SessionPrismaRepository(prisma);
   const videoRepo = new VideoPrismaRepository(prisma);
   const videoQueries = new VideoPrismaQueries(prisma);
+  const userQueries = new UserPrismaQueries(prisma);
   const videoStorage = new LocalDiskVideoStorageGateway(config.storageRoot);
   const mediaProbe = new FfprobeMediaProbeGateway();
   const thumbnailGateway = new FfmpegThumbnailGateway();
@@ -56,6 +60,11 @@ export function bootstrap(): Promise<FastifyInstance> {
   const uploadVideo = new UploadVideoUseCase(videoRepo, videoStorage, mediaProbe, thumbnailGateway);
   const listVideos = new ListVideosUseCase(videoQueries);
   const getVideoThumbnail = new GetVideoThumbnailUseCase(videoRepo, videoStorage);
+  const getAdminOverview = new GetAdminOverviewUseCase(userQueries, videoQueries, userRepo);
+  const listUsersForAdmin = new ListUsersForAdminUseCase(userQueries, userRepo);
+  const suspendUser = new SuspendUserUseCase(userRepo, sessionRepo);
+  const reactivateUser = new ReactivateUserUseCase(userRepo);
+  const deleteUser = new DeleteUserUseCase(userRepo, userQueries, videoRepo, sessionRepo, videoStorage);
 
   // 4. Handlers
   const registerHandler = new RegisterHandler(createUser);
@@ -66,6 +75,11 @@ export function bootstrap(): Promise<FastifyInstance> {
   const uploadHandler = new UploadHandler(uploadVideo);
   const listHandler = new ListHandler(listVideos);
   const thumbnailHandler = new ThumbnailHandler(getVideoThumbnail);
+  const overviewHandler = new AdminOverviewHandler(getAdminOverview);
+  const adminListHandler = new AdminListHandler(listUsersForAdmin);
+  const adminSuspendHandler = new AdminSuspendHandler(suspendUser);
+  const adminReactivateHandler = new AdminReactivateHandler(reactivateUser);
+  const adminDeleteHandler = new AdminDeleteHandler(deleteUser);
 
   // 5. Routes + auth middleware
   const routes = buildHttpRoutes({
@@ -77,6 +91,8 @@ export function bootstrap(): Promise<FastifyInstance> {
     uploadHandler,
     listHandler,
     thumbnailHandler,
+    overviewHandler, adminListHandler, suspendHandler: adminSuspendHandler,
+    reactivateHandler: adminReactivateHandler, deleteHandler: adminDeleteHandler,
   });
   const authMiddleware = new AuthMiddleware(resolveSession);
 
