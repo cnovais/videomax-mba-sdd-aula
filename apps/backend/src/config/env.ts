@@ -7,6 +7,7 @@ const schema = z.object({
   databaseUrl: z.string().url(),
   sessionSecret: z.string().min(1),
   storageRoot: z.string().default("./storage"),
+  storageDeleteFailureKeys: z.string().default(""),
 });
 
 const parsed = schema.safeParse({
@@ -15,6 +16,7 @@ const parsed = schema.safeParse({
   databaseUrl: process.env["DATABASE_URL"],
   sessionSecret: process.env["SESSION_SECRET"],
   storageRoot: process.env["STORAGE_ROOT"],
+  storageDeleteFailureKeys: process.env["STORAGE_DELETE_FAILURE_KEYS"],
 });
 
 if (!parsed.success) {

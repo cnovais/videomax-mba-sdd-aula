@@ -9,6 +9,7 @@ import { SessionPrismaRepository } from "@/infra/repository/session/session.pris
 import { VideoPrismaRepository } from "@/infra/repository/video/video.prisma-repository";
 import { VideoPrismaQueries } from "@/infra/queries/video/video.prisma-queries";
 import { LocalDiskVideoStorageGateway } from "@/infra/gateway/local-disk-video-storage.gateway";
+import { ConfigurableFailureVideoStorageGateway } from "@/infra/gateway/configurable-failure-video-storage.gateway";
 import { FfprobeMediaProbeGateway } from "@/infra/gateway/ffprobe-media-probe.gateway";
 import { FfmpegThumbnailGateway } from "@/infra/gateway/ffmpeg-thumbnail.gateway";
 
@@ -50,7 +51,10 @@ export function bootstrap(): Promise<FastifyInstance> {
   const sessionRepo = new SessionPrismaRepository(prisma);
   const videoRepo = new VideoPrismaRepository(prisma);
   const videoQueries = new VideoPrismaQueries(prisma);
-  const videoStorage = new LocalDiskVideoStorageGateway(config.storageRoot);
+  const videoStorage = new ConfigurableFailureVideoStorageGateway(
+    new LocalDiskVideoStorageGateway(config.storageRoot),
+    config.storageDeleteFailureKeys,
+  );
   const mediaProbe = new FfprobeMediaProbeGateway();
   const thumbnailGateway = new FfmpegThumbnailGateway();
 
