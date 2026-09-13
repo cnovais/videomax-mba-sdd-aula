@@ -1,10 +1,24 @@
 "use client";
 
-import { useRef, type DragEvent } from "react";
+import { memo, useRef, type DragEvent } from "react";
 import { vmButtonClasses } from "@/components/vm-button";
+import { ACCEPTED_EXTENSIONS } from "@/lib/upload-client";
 
-/** Drag-and-drop zone plus a file-picker fallback, per PRD's Experience. */
-export function UploadDropzone({ onFilesSelected }: { onFilesSelected: (files: FileList) => void }) {
+const ACCEPT_ATTRIBUTE = ACCEPTED_EXTENSIONS.map((ext) => `.${ext}`).join(",");
+const ACCEPTED_FORMATS_LABEL = ACCEPTED_EXTENSIONS.map((ext) => ext.toUpperCase()).join(" · ");
+
+/**
+ * Drag-and-drop zone plus a file-picker fallback, per PRD's Experience.
+ * Memoized: its props (`onFilesSelected`) are stable across re-renders of
+ * the parent `VideoLibrary`, so this never needs to re-render on its own
+ * — most notably not on every upload-progress tick, which only touches
+ * unrelated state in the parent.
+ */
+export const UploadDropzone = memo(function UploadDropzone({
+  onFilesSelected,
+}: {
+  onFilesSelected: (files: FileList) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleDrop(event: DragEvent<HTMLDivElement>) {
@@ -30,7 +44,7 @@ export function UploadDropzone({ onFilesSelected }: { onFilesSelected: (files: F
         <input
           ref={inputRef}
           type="file"
-          accept=".mp4,.mov,.mkv,.webm,.avi"
+          accept={ACCEPT_ATTRIBUTE}
           className="hidden"
           data-testid="upload-file-input"
           onChange={(event) => {
@@ -40,8 +54,8 @@ export function UploadDropzone({ onFilesSelected }: { onFilesSelected: (files: F
         />
       </div>
       <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.04em] text-muted">
-        MP4 · MOV · MKV · WEBM · AVI · MAX 2GB
+        {ACCEPTED_FORMATS_LABEL} · MAX 2GB
       </p>
     </div>
   );
-}
+});

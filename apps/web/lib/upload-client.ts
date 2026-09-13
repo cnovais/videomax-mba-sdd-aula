@@ -1,4 +1,6 @@
-const ACCEPTED_EXTENSIONS = ["mp4", "mov", "mkv", "webm", "avi"];
+// Exported so the drop zone's file-picker `accept` attribute and helper
+// text derive from this one list instead of restating it.
+export const ACCEPTED_EXTENSIONS = ["mp4", "mov", "mkv", "webm", "avi"];
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024 * 1024; // 2GB — matches the backend's own limit
 
 export const UNSUPPORTED_FORMAT_MESSAGE = "Only MP4, MOV, MKV, WEBM, and AVI files are supported";
@@ -7,6 +9,9 @@ export const FILE_TOO_LARGE_MESSAGE = "Files must be at most 2GB";
 export type UploadState = "queued" | "uploading" | "done" | "error";
 
 export type UploadProgress = {
+  /** Unique per enqueue call — lets the UI key a list of these by identity even
+   * when the same file (same name + lastModified) is selected more than once. */
+  id: string;
   file: File;
   loaded: number;
   total: number;
@@ -47,8 +52,18 @@ export function validateFile(file: File): string | null {
  * the current one finishes"). `XMLHttpRequest`, not `fetch`, because only
  * it exposes `upload.onprogress` in the browsers this product targets.
  */
+/** A file waiting in the single-flight queue, tagged with a unique id so two
+ * enqueues of the identical file (same name + lastModified) stay distinguishable. */
+type QueuedFile = { id: string; file: File };
+
+function createUploadId(): string {
+  return typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export class UploadClient {
-  private readonly queue: File[] = [];
+  private readonly queue: QueuedFile[] = [];
   private uploading = false;
 
   constructor(private readonly callbacks: UploadClientCallbacks) {}
@@ -59,8 +74,9 @@ export class UploadClient {
       this.callbacks.onRejected(file, rejection);
       return;
     }
-    this.queue.push(file);
-    this.callbacks.onProgress({ file, loaded: 0, total: file.size, state: "queued" });
+    const id = createUploadId();
+    this.queue.push({ id, file });
+    this.callbacks.onProgress({ id, file, loaded: 0, total: file.size, state: "queued" });
     this.processNext();
   }
 
@@ -72,14 +88,14 @@ export class UploadClient {
     this.upload(next);
   }
 
-  private upload(file: File): void {
+  private upload({ id, file }: QueuedFile): void {
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
     formData.append("video", file, file.name);
 
     xhr.upload.addEventListener("progress", (event) => {
       if (!event.lengthComputable) return;
-      this.callbacks.onProgress({ file, loaded: event.loaded, total: event.total, state: "uploading" });
+      this.callbacks.onProgress({ id, file, loaded: event.loaded, total: event.total, state: "uploading" });
     });
 
     xhr.addEventListener("load", () => {

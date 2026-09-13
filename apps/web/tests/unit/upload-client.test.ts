@@ -89,6 +89,23 @@ describe("UploadClient", () => {
     expect(FakeXHR.created).toHaveLength(2);
   });
 
+  it("assigns a unique id to each enqueue, even for the identical file selected twice", () => {
+    // Regression: the queue previously had no per-enqueue identity, so the UI
+    // derived a React list key from `name + lastModified`, which collides when
+    // the same file is selected twice in quick succession (E2E-UPLOAD-02) and
+    // corrupts rendering of the two progress entries.
+    const onProgress = vi.fn();
+    const client = new UploadClient({ onRejected: vi.fn(), onProgress, onCompleted: vi.fn(), onFailed: vi.fn() });
+    const file = makeFile("same.mp4", 1024);
+
+    client.enqueue(file);
+    client.enqueue(file);
+
+    const ids = onProgress.mock.calls.map(([progress]) => progress.id);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
+  });
+
   it("calls onCompleted with the parsed video on success", () => {
     const onCompleted = vi.fn();
     const client = new UploadClient({ onRejected: vi.fn(), onProgress: vi.fn(), onCompleted, onFailed: vi.fn() });

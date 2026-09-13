@@ -44,6 +44,10 @@ export function VideoLibrary({ initialVideos }: { initialVideos: UploadedVideo[]
             const next = new Map(prev);
             const existing = next.get(file);
             next.set(file, {
+              // `onProgress` always fires before `onFailed` for the same file,
+              // so `existing.id` is present; the fallback only guards an
+              // otherwise-unreachable ordering.
+              id: existing?.id ?? `${file.name}-${file.lastModified}`,
               file,
               loaded: existing?.loaded ?? 0,
               total: existing?.total ?? file.size,
@@ -77,7 +81,7 @@ export function VideoLibrary({ initialVideos }: { initialVideos: UploadedVideo[]
       {uploads.size > 0 ? (
         <div className="flex flex-col gap-2" data-testid="upload-queue">
           {Array.from(uploads.values()).map((progress) => (
-            <UploadProgressCard key={`${progress.file.name}-${progress.file.lastModified}`} progress={progress} />
+            <UploadProgressCard key={progress.id} progress={progress} />
           ))}
         </div>
       ) : null}

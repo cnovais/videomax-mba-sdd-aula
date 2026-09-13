@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { UploadedVideo } from "@/lib/upload-client";
 import { formatBytes } from "@/lib/format-bytes";
 import { VMBadge, type VMBadgeTone } from "@/components/vm-badge";
@@ -26,8 +27,13 @@ function thumbnailSrc(thumbnailUrl: string | null): string {
  * its "video appears in the library" ACs are verifiable ahead of F04
  * (the real Video Library, which replaces this with sort/filter/rename/
  * delete). See spec's Technical Decisions.
+ *
+ * Memoized: `videos` only changes on upload completion, not on every
+ * progress tick — without this, the whole grid (every thumbnail `<img>`)
+ * would re-render on each `xhr.upload.onprogress` event from an unrelated
+ * in-flight upload.
  */
-export function VideoList({ videos }: { videos: UploadedVideo[] }) {
+export const VideoList = memo(function VideoList({ videos }: { videos: UploadedVideo[] }) {
   if (videos.length === 0) {
     return (
       <p className="text-sm text-ink-2" data-testid="video-list-empty">
@@ -70,4 +76,4 @@ export function VideoList({ videos }: { videos: UploadedVideo[] }) {
       })}
     </div>
   );
-}
+});

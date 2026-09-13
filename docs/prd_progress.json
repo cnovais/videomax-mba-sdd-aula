@@ -33,20 +33,25 @@
       "name": "Video Upload",
       "priority": 1,
       "wave": 2,
-      "dependencies": ["F02"],
-      "status": "implemented",
-      "cycles": 0,
-      "failure_reason": null,
-      "report_path": null,
+      "dependencies": [
+        "F02"
+      ],
+      "status": "fail",
+      "cycles": 2,
+      "failure_reason": "orchestrator aborted: fix-runner cycle 2 aborted - 7 UI/E2E items BLOCKED by missing browser driver (no playwright-cli / claude-in-chrome), not a code defect; re-eval once available",
+      "report_path": "docs/F03-video-upload/eval-report-2026-09-12T23-12-54Z.md",
       "started_at": "2026-09-08T02:00:00Z",
-      "updated_at": "2026-09-08T02:45:00Z",
+      "updated_at": "2026-09-12T23:19:03Z",
       "completed_at": null
     },
     "F04": {
       "name": "Video Library",
       "priority": 1,
       "wave": 3,
-      "dependencies": ["F02", "F03"],
+      "dependencies": [
+        "F02",
+        "F03"
+      ],
       "status": "pending",
       "cycles": 0,
       "failure_reason": null,
@@ -59,7 +64,11 @@
       "name": "Folder Organization",
       "priority": 2,
       "wave": 4,
-      "dependencies": ["F02", "F03", "F04"],
+      "dependencies": [
+        "F02",
+        "F03",
+        "F04"
+      ],
       "status": "pending",
       "cycles": 0,
       "failure_reason": null,
@@ -72,7 +81,11 @@
       "name": "Tag Organization",
       "priority": 2,
       "wave": 4,
-      "dependencies": ["F02", "F03", "F04"],
+      "dependencies": [
+        "F02",
+        "F03",
+        "F04"
+      ],
       "status": "pending",
       "cycles": 0,
       "failure_reason": null,
@@ -85,7 +98,9 @@
       "name": "Background Processing Pipeline",
       "priority": 1,
       "wave": 3,
-      "dependencies": ["F03"],
+      "dependencies": [
+        "F03"
+      ],
       "status": "pending",
       "cycles": 0,
       "failure_reason": null,
@@ -98,7 +113,10 @@
       "name": "Video Player with Transcription Panel",
       "priority": 1,
       "wave": 4,
-      "dependencies": ["F03", "F07"],
+      "dependencies": [
+        "F03",
+        "F07"
+      ],
       "status": "pending",
       "cycles": 0,
       "failure_reason": null,
@@ -111,7 +129,9 @@
       "name": "In-Video Transcription Search",
       "priority": 2,
       "wave": 5,
-      "dependencies": ["F08"],
+      "dependencies": [
+        "F08"
+      ],
       "status": "pending",
       "cycles": 0,
       "failure_reason": null,
@@ -124,7 +144,10 @@
       "name": "AI Summary Display",
       "priority": 1,
       "wave": 5,
-      "dependencies": ["F07", "F08"],
+      "dependencies": [
+        "F07",
+        "F08"
+      ],
       "status": "pending",
       "cycles": 0,
       "failure_reason": null,
@@ -137,7 +160,10 @@
       "name": "In-App Processing Notifications",
       "priority": 2,
       "wave": 4,
-      "dependencies": ["F03", "F07"],
+      "dependencies": [
+        "F03",
+        "F07"
+      ],
       "status": "pending",
       "cycles": 0,
       "failure_reason": null,
@@ -150,7 +176,10 @@
       "name": "Administration Panel",
       "priority": 2,
       "wave": 3,
-      "dependencies": ["F02", "F03"],
+      "dependencies": [
+        "F02",
+        "F03"
+      ],
       "status": "pending",
       "cycles": 0,
       "failure_reason": null,

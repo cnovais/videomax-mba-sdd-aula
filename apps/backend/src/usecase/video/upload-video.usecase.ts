@@ -7,11 +7,6 @@ import type { ThumbnailGateway } from "@/domain/video/thumbnail.gateway";
 import { VideoExtension } from "@/domain/video/video-extension.vo";
 import { type UploadVideoInput, type UploadVideoOutput, toOutput } from "./upload-video.dto";
 
-function stripExtension(filename: string): string {
-  const dotIndex = filename.lastIndexOf(".");
-  return dotIndex === -1 ? filename : filename.slice(0, dotIndex);
-}
-
 /**
  * Orchestrates, in order: format guard, stream-to-disk, duration probe,
  * best-effort thumbnail extraction, persist. See spec's Technical
@@ -41,9 +36,13 @@ export class UploadVideoUseCase {
       this.storage.pathFor(thumbnailKey),
     );
 
+    // The extension's own length is already known from the guard above —
+    // no need for a second `lastIndexOf(".")` scan to strip it.
+    const title = input.originalFilename.slice(0, -(extension.value.length + 1));
+
     const video = Video.create({
       userId: input.actorId,
-      title: stripExtension(input.originalFilename),
+      title,
       originalFilename: input.originalFilename,
       storageKey,
       sizeBytes,

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { BACKEND_URL } from "./resolve-ports";
 
-const BACKEND_URL = "http://localhost:4000";
 const SESSION_COOKIE_NAME = "videomax_session";
 
 test.describe("Authentication", () => {

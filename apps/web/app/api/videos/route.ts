@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { backendFetch } from "@/lib/backend-client";
-import { getSessionToken } from "@/lib/session";
+import { requireSessionToken } from "@/lib/session";
 
 /**
  * Proxies video upload/list to the backend, forwarding the bearer token
@@ -9,10 +9,8 @@ import { getSessionToken } from "@/lib/session";
  * buffers a large upload in this process's memory.
  */
 export async function POST(request: Request): Promise<Response> {
-  const token = await getSessionToken();
-  if (!token) {
-    return NextResponse.json({ code: "UNAUTHENTICATED", message: "Authentication required" }, { status: 401 });
-  }
+  const token = await requireSessionToken();
+  if (token instanceof Response) return token;
 
   const contentType = request.headers.get("content-type") ?? "";
   const backendResponse = await backendFetch(
@@ -33,10 +31,8 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 export async function GET(request: Request): Promise<Response> {
-  const token = await getSessionToken();
-  if (!token) {
-    return NextResponse.json({ code: "UNAUTHENTICATED", message: "Authentication required" }, { status: 401 });
-  }
+  const token = await requireSessionToken();
+  if (token instanceof Response) return token;
 
   const { search } = new URL(request.url);
   const backendResponse = await backendFetch(`/videos${search}`, { method: "GET" }, token);

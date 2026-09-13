@@ -27,6 +27,15 @@ export class UnsupportedFormatError extends DomainError {
   }
 }
 
+export class MissingFilePartError extends DomainError {
+  readonly code = "MISSING_FILE_PART";
+  readonly status = 400;
+
+  constructor() {
+    super('Multipart request has no "video" file part');
+  }
+}
+
 // No FileTooLargeError domain class: the 413 response for an oversized
 // upload is @fastify/multipart's own file-size-limit error (FST_REQ_FILE_
 // TOO_LARGE), mapped inline in infra/http/error-handler.ts — the same
