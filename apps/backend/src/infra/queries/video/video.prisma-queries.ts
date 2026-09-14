@@ -36,13 +36,14 @@ export class VideoPrismaQueries implements VideoQueries {
       total,
     };
   }
+  countAll(): Promise<number> { return this.prisma.video.count(); }
 
-  async findDue(limit: number, now: Date) {
+  async findDue(limit: number, now: Date): Promise<ReturnType<typeof VideoMapper.toDomain>[]> {
     const rows = await this.prisma.video.findMany({ where: { status: { notIn: ["ready", "failed"] }, nextAttemptAt: { lte: now } }, take: limit });
     return rows.map((row) => VideoMapper.toDomain(row));
   }
 
-  async processingStatus(id: string) {
+  async processingStatus(id: string): Promise<{ status: string; attemptCount: number } | null> {
     return this.prisma.video.findUnique({ where: { id }, select: { status: true, attemptCount: true } });
   }
 }

@@ -14,6 +14,7 @@ export class VideoInMemoryRepository implements VideoRepository {
     return Promise.resolve();
   }
   delete(id: string): Promise<void> { this.videosById.delete(id); return Promise.resolve(); }
+  findAllByUserId(userId: string): Promise<Video[]> { return Promise.resolve(this.all().filter((video) => video.userId === userId)); }
 
   /** Test-only helper: not part of the `VideoRepository` interface. */
   all(): Video[] {

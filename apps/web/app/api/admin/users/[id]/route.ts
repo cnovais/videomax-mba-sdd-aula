@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {backendFetch} from "@/lib/backend-client";import {requireSessionToken} from "@/lib/session";
+export async function DELETE(req:Request,{params}:{params:Promise<{id:string}>}){const t=await requireSessionToken();if(t instanceof Response)return t;const r=await backendFetch(`/admin/users/${(await params).id}`,{method:"DELETE",headers:{"content-type":"application/json"},body:JSON.stringify(await req.json())},t);if(r.status===204)return new Response(null,{status:204});return NextResponse.json(await r.json(),{status:r.status});}

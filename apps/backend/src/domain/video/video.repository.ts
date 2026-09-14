@@ -4,4 +4,5 @@ export interface VideoRepository {
   findById(id: string): Promise<Video | null>;
   save(video: Video): Promise<void>;
   delete(id: string): Promise<void>;
+  findAllByUserId(userId: string): Promise<Video[]>;
 }

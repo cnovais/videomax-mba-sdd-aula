@@ -16,6 +16,7 @@ export type VideoListItem = {
 
 export interface VideoQueries {
   listByUser(userId: string, page: PageInput, sort: VideoSort): Promise<PageOutput<VideoListItem>>;
+  countAll(): Promise<number>;
   findDue(limit: number, now: Date): Promise<Video[]>;
   processingStatus(id: string): Promise<{ status: string; attemptCount: number } | null>;
 }

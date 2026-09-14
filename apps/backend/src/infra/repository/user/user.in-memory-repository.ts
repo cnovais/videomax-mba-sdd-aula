@@ -20,4 +20,6 @@ export class UserInMemoryRepository implements UserRepository {
     this.usersById.set(user.id, user);
     return Promise.resolve();
   }
+  delete(id: string): Promise<void> { this.usersById.delete(id); return Promise.resolve(); }
+  all(): User[] { return [...this.usersById.values()]; }
 }

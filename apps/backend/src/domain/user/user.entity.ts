@@ -17,6 +17,7 @@ export type RestoreUserProps = {
   isAdmin: boolean;
   isSuspended: boolean;
   createdAt: Date;
+  lastLoginAt?: Date | null;
   libraryViewMode?: string;
 };
 
@@ -29,6 +30,7 @@ export class User {
     private readonly _isAdmin: boolean,
     private readonly _isSuspended: boolean,
     private readonly _createdAt: Date,
+    private readonly _lastLoginAt: Date | null,
     private readonly _libraryViewMode: LibraryViewMode,
   ) {}
 
@@ -48,6 +50,7 @@ export class User {
       false,
       false,
       new Date(),
+      null,
       LibraryViewMode.create("grid"),
     );
   }
@@ -62,8 +65,22 @@ export class User {
       props.isAdmin,
       props.isSuspended,
       props.createdAt,
+      props.lastLoginAt ?? null,
       LibraryViewMode.create(props.libraryViewMode ?? "grid"),
     );
+  }
+
+  suspend(): User { return this.copy({ isSuspended: true }); }
+  reactivate(): User { return this.copy({ isSuspended: false }); }
+  recordLogin(at: Date = new Date()): User { return this.copy({ lastLoginAt: at }); }
+  assertIsAdmin(): void {
+    if (!this._isAdmin) throw new Error(`User ${this.id} is not an administrator`);
+  }
+
+  private copy(changes: { isSuspended?: boolean; lastLoginAt?: Date | null }): User {
+    return new User(this._id, this._name, this._email, this._hashedPassword, this._isAdmin,
+      changes.isSuspended ?? this._isSuspended, this._createdAt,
+      changes.lastLoginAt ?? this._lastLoginAt, this._libraryViewMode);
   }
 
   verifyPassword(rawPassword: string): boolean {
@@ -98,8 +115,12 @@ export class User {
     return this._createdAt;
   }
 
+  get lastLoginAt(): Date | null { return this._lastLoginAt; }
   get libraryViewMode(): LibraryViewModeValue { return this._libraryViewMode.value; }
-  changeLibraryViewMode(mode: string): User { return User.restore({ id: this.id, name: this.name, email: this.email, hashedPassword: this.hashedPassword, isAdmin: this.isAdmin, isSuspended: this.isSuspended, createdAt: this.createdAt, libraryViewMode: LibraryViewMode.create(mode).value }); }
+  changeLibraryViewMode(mode: string): User {
+    return new User(this._id, this._name, this._email, this._hashedPassword, this._isAdmin,
+      this._isSuspended, this._createdAt, this._lastLoginAt, LibraryViewMode.create(mode));
+  }
 
   toJSON(): never {
     throw new Error("Do not serialize Entity directly. Use toOutput() in the use case DTO.");

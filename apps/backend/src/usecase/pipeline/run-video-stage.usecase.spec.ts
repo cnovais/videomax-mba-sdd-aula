@@ -44,7 +44,7 @@ function pipeline(options: { probe?: FakeMediaProbeGateway; transcription?: Fake
   const transcripts = new TranscriptionInMemoryRepository();
   const summaries = new SummaryInMemoryRepository();
   const stage = new RunVideoStageUseCase(videos, new FakeVideoStorage(), options.probe ?? new FakeMediaProbeGateway(), new FakeAudioExtractionGateway(), options.transcription ?? new FakeTranscriptionGateway(), transcripts, options.summary ?? new FakeSummaryGateway(), summaries);
-  const process = new ProcessPendingVideosUseCase({ findDue: (limit, now) => Promise.resolve(videos.all().filter((candidate) => !["ready", "failed"].includes(candidate.status) && (candidate.nextAttemptAt?.getTime() ?? 0) <= now.getTime()).slice(0, limit)), listByUser: () => Promise.resolve({ items: [], page: 1, pageSize: 20, total: 0 }), processingStatus: () => Promise.resolve(null) }, stage, 2);
+  const process = new ProcessPendingVideosUseCase({ countAll: () => Promise.resolve(0), findDue: (limit, now) => Promise.resolve(videos.all().filter((candidate) => !["ready", "failed"].includes(candidate.status) && (candidate.nextAttemptAt?.getTime() ?? 0) <= now.getTime()).slice(0, limit)), listByUser: () => Promise.resolve({ items: [], page: 1, pageSize: 20, total: 0 }), processingStatus: () => Promise.resolve(null) }, stage, 2);
   return { videos, transcripts, summaries, stage, process };
 }
 
