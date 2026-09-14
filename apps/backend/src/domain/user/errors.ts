@@ -60,3 +60,9 @@ export class SelfAdminActionError extends DomainError {
   readonly code = "FORBIDDEN"; readonly status = 403;
   constructor() { super("You cannot suspend or delete your own admin account"); }
 }
+
+export class InvalidLibraryViewModeError extends DomainError {
+  readonly code = "INVALID_LIBRARY_VIEW_MODE";
+  readonly status = 422;
+  constructor(value: string) { super(`Invalid library view mode: "${value}"`); }
+}

@@ -1,6 +1,7 @@
 import { Email } from "./email.vo";
 import { HashedPassword } from "./hashed-password.vo";
 import { UserId } from "./user-id.vo";
+import { LibraryViewMode, type LibraryViewModeValue } from "./library-view-mode.vo";
 
 export type CreateUserProps = {
   name: string;
@@ -17,6 +18,7 @@ export type RestoreUserProps = {
   isSuspended: boolean;
   createdAt: Date;
   lastLoginAt?: Date | null;
+  libraryViewMode?: string;
 };
 
 export class User {
@@ -29,6 +31,7 @@ export class User {
     private readonly _isSuspended: boolean,
     private readonly _createdAt: Date,
     private readonly _lastLoginAt: Date | null,
+    private readonly _libraryViewMode: LibraryViewMode,
   ) {}
 
   /**
@@ -48,6 +51,7 @@ export class User {
       false,
       new Date(),
       null,
+      LibraryViewMode.create("grid"),
     );
   }
 
@@ -62,6 +66,7 @@ export class User {
       props.isSuspended,
       props.createdAt,
       props.lastLoginAt ?? null,
+      LibraryViewMode.create(props.libraryViewMode ?? "grid"),
     );
   }
 
@@ -74,7 +79,8 @@ export class User {
 
   private copy(changes: { isSuspended?: boolean; lastLoginAt?: Date | null }): User {
     return new User(this._id, this._name, this._email, this._hashedPassword, this._isAdmin,
-      changes.isSuspended ?? this._isSuspended, this._createdAt, changes.lastLoginAt ?? this._lastLoginAt);
+      changes.isSuspended ?? this._isSuspended, this._createdAt,
+      changes.lastLoginAt ?? this._lastLoginAt, this._libraryViewMode);
   }
 
   verifyPassword(rawPassword: string): boolean {
@@ -110,6 +116,11 @@ export class User {
   }
 
   get lastLoginAt(): Date | null { return this._lastLoginAt; }
+  get libraryViewMode(): LibraryViewModeValue { return this._libraryViewMode.value; }
+  changeLibraryViewMode(mode: string): User {
+    return new User(this._id, this._name, this._email, this._hashedPassword, this._isAdmin,
+      this._isSuspended, this._createdAt, this._lastLoginAt, LibraryViewMode.create(mode));
+  }
 
   toJSON(): never {
     throw new Error("Do not serialize Entity directly. Use toOutput() in the use case DTO.");

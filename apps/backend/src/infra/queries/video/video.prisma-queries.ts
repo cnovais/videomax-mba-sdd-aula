@@ -1,17 +1,17 @@
 import type { PrismaClient } from "@prisma/client";
 import type { PageInput, PageOutput } from "@/domain/_shared/pagination";
-import type { VideoListItem, VideoQueries } from "@/domain/video/video.queries";
+import type { VideoListItem, VideoQueries, VideoSort } from "@/domain/video/video.queries";
 import { VideoMapper } from "@/infra/repository/video/video.mapper";
 
 export class VideoPrismaQueries implements VideoQueries {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async listByUser(userId: string, page: PageInput): Promise<PageOutput<VideoListItem>> {
+  async listByUser(userId: string, page: PageInput, sort: VideoSort): Promise<PageOutput<VideoListItem>> {
     const skip = (page.page - 1) * page.pageSize;
     const [rows, total] = await Promise.all([
       this.prisma.video.findMany({
         where: { userId },
-        orderBy: { uploadedAt: "desc" },
+        orderBy: sort === "title" ? { title: "asc" } : { uploadedAt: sort === "oldest" ? "asc" : "desc" },
         skip,
         take: page.pageSize,
       }),
@@ -22,6 +22,7 @@ export class VideoPrismaQueries implements VideoQueries {
       items: rows.map((row) => ({
         id: row.id,
         title: row.title,
+        description: row.description,
         status: row.status,
         thumbnailPath: row.thumbnailPath,
         sizeBytes: row.sizeBytes,

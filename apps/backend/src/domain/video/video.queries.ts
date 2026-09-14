@@ -4,6 +4,7 @@ import type { Video } from "./video.entity";
 export type VideoListItem = {
   id: string;
   title: string;
+  description: string;
   status: string;
   thumbnailPath: string | null;
   sizeBytes: number;
@@ -14,8 +15,9 @@ export type VideoListItem = {
 };
 
 export interface VideoQueries {
-  listByUser(userId: string, page: PageInput): Promise<PageOutput<VideoListItem>>;
+  listByUser(userId: string, page: PageInput, sort: VideoSort): Promise<PageOutput<VideoListItem>>;
   countAll(): Promise<number>;
   findDue(limit: number, now: Date): Promise<Video[]>;
   processingStatus(id: string): Promise<{ status: string; attemptCount: number } | null>;
 }
+export type VideoSort = "recent" | "oldest" | "title";

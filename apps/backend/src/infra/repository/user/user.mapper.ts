@@ -9,6 +9,7 @@ export type UserPersistenceData = {
   isAdmin: boolean;
   isSuspended: boolean;
   lastLoginAt: Date | null;
+  libraryViewMode: string;
 };
 
 export class UserMapper {
@@ -22,6 +23,7 @@ export class UserMapper {
       isSuspended: row.isSuspended,
       createdAt: row.createdAt,
       lastLoginAt: (row as UserRow & { lastLoginAt?: Date | null }).lastLoginAt ?? null,
+      libraryViewMode: (row as UserRow & { libraryViewMode?: string }).libraryViewMode ?? "grid",
     });
   }
 
@@ -34,6 +36,7 @@ export class UserMapper {
       isAdmin: user.isAdmin,
       isSuspended: user.isSuspended,
       lastLoginAt: user.lastLoginAt,
+      libraryViewMode: user.libraryViewMode,
     };
   }
 }
