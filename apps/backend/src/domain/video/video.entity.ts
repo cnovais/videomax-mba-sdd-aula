@@ -12,6 +12,7 @@ export type CreateVideoProps = {
   durationSeconds: number;
   containerFormat: string;
   thumbnailPath: string | null;
+  nextAttemptAt?: Date;
 };
 
 export type RestoreVideoProps = {
@@ -27,6 +28,11 @@ export type RestoreVideoProps = {
   status: string;
   thumbnailPath: string | null;
   uploadedAt: Date;
+  attemptCount?: number;
+  nextAttemptAt?: Date | null;
+  failedStage?: string | null;
+  failureReason?: string | null;
+  audioStorageKey?: string | null;
 };
 
 export class Video {
@@ -40,9 +46,14 @@ export class Video {
     private readonly _sizeBytes: number,
     private readonly _durationSeconds: number,
     private readonly _containerFormat: string,
-    private readonly _status: VideoStatus,
+    private _status: VideoStatus,
     private readonly _thumbnailPath: string | null,
     private readonly _uploadedAt: Date,
+    private _attemptCount: number,
+    private _nextAttemptAt: Date | null,
+    private _failedStage: string | null,
+    private _failureReason: string | null,
+    private _audioStorageKey: string | null,
   ) {}
 
   /**
@@ -66,7 +77,7 @@ export class Video {
       props.containerFormat,
       VideoStatus.create("validating"),
       props.thumbnailPath,
-      new Date(),
+      new Date(), 0, props.nextAttemptAt ?? new Date(), null, null, null,
     );
   }
 
@@ -85,6 +96,11 @@ export class Video {
       VideoStatus.create(props.status),
       props.thumbnailPath,
       props.uploadedAt,
+      props.attemptCount ?? 0,
+      props.nextAttemptAt === undefined ? props.uploadedAt : props.nextAttemptAt,
+      props.failedStage ?? null,
+      props.failureReason ?? null,
+      props.audioStorageKey ?? null,
     );
   }
 
@@ -139,7 +155,32 @@ export class Video {
   rename(title: string): Video { return this.copy({ title: VideoTitle.create(title).value }); }
   updateDescription(description: string): Video { return this.copy({ description: VideoDescription.create(description).value }); }
   private copy(changes: { title?: string; description?: string }): Video {
-    return Video.restore({ id: this.id, userId: this.userId, title: changes.title ?? this.title, description: changes.description ?? this.description, originalFilename: this.originalFilename, storageKey: this.storageKey, sizeBytes: this.sizeBytes, durationSeconds: this.durationSeconds, containerFormat: this.containerFormat, status: this.status, thumbnailPath: this.thumbnailPath, uploadedAt: this.uploadedAt });
+    return Video.restore({ id: this.id, userId: this.userId, title: changes.title ?? this.title, description: changes.description ?? this.description, originalFilename: this.originalFilename, storageKey: this.storageKey, sizeBytes: this.sizeBytes, durationSeconds: this.durationSeconds, containerFormat: this.containerFormat, status: this.status, thumbnailPath: this.thumbnailPath, uploadedAt: this.uploadedAt, attemptCount: this.attemptCount, nextAttemptAt: this.nextAttemptAt, failedStage: this.failedStage, failureReason: this.failureReason, audioStorageKey: this.audioStorageKey });
+  }
+  get attemptCount(): number { return this._attemptCount; }
+  get nextAttemptAt(): Date | null { return this._nextAttemptAt; }
+  get failedStage(): string | null { return this._failedStage; }
+  get failureReason(): string | null { return this._failureReason; }
+  get audioStorageKey(): string | null { return this._audioStorageKey; }
+
+  markValidated(audioStorageKey: string): void { this._audioStorageKey = audioStorageKey; this._nextAttemptAt = new Date(); }
+  advanceTo(stage: "transcribing" | "summarizing" | "ready"): void {
+    this._status = VideoStatus.create(stage);
+    this._attemptCount = 0;
+    this._failedStage = null;
+    this._failureReason = null;
+    this._nextAttemptAt = new Date();
+  }
+  recordTransientFailure(stage: "transcribing" | "summarizing", reason: string, now = new Date()): void {
+    this._attemptCount += 1; this._failedStage = stage; this._failureReason = reason;
+    if (this._attemptCount >= 3) { this._status = VideoStatus.create("failed"); this._nextAttemptAt = null; return; }
+    const delays = [60_000, 300_000, 900_000];
+    this._nextAttemptAt = new Date(now.getTime() + (delays[this._attemptCount - 1] ?? 900_000));
+  }
+  failValidation(reason: string): void { this._status = VideoStatus.create("failed"); this._failedStage = "validating"; this._failureReason = reason; this._nextAttemptAt = null; }
+  retry(): void {
+    if (this.status !== "failed" || !this._failedStage || this._failedStage === "validating") throw new Error("Video cannot be retried without a retryable failed stage");
+    this._status = VideoStatus.create(this._failedStage); this._attemptCount = 0; this._failureReason = null; this._nextAttemptAt = new Date();
   }
 
   toJSON(): never {

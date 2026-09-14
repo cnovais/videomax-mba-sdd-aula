@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import type { PageInput, PageOutput } from "@/domain/_shared/pagination";
 import type { VideoListItem, VideoQueries, VideoSort } from "@/domain/video/video.queries";
+import { VideoMapper } from "@/infra/repository/video/video.mapper";
 
 export class VideoPrismaQueries implements VideoQueries {
   constructor(private readonly prisma: PrismaClient) {}
@@ -27,10 +28,21 @@ export class VideoPrismaQueries implements VideoQueries {
         sizeBytes: row.sizeBytes,
         durationSeconds: row.durationSeconds,
         uploadedAt: row.uploadedAt,
+        attemptCount: row.attemptCount,
+        failureReason: row.failureReason,
       })),
       page: page.page,
       pageSize: page.pageSize,
       total,
     };
+  }
+
+  async findDue(limit: number, now: Date) {
+    const rows = await this.prisma.video.findMany({ where: { status: { notIn: ["ready", "failed"] }, nextAttemptAt: { lte: now } }, take: limit });
+    return rows.map((row) => VideoMapper.toDomain(row));
+  }
+
+  async processingStatus(id: string) {
+    return this.prisma.video.findUnique({ where: { id }, select: { status: true, attemptCount: true } });
   }
 }

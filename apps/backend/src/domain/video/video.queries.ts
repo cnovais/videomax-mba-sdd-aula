@@ -1,4 +1,5 @@
 import type { PageInput, PageOutput } from "@/domain/_shared/pagination";
+import type { Video } from "./video.entity";
 
 export type VideoListItem = {
   id: string;
@@ -9,9 +10,13 @@ export type VideoListItem = {
   sizeBytes: number;
   durationSeconds: number;
   uploadedAt: Date;
+  attemptCount: number;
+  failureReason: string | null;
 };
 
 export interface VideoQueries {
   listByUser(userId: string, page: PageInput, sort: VideoSort): Promise<PageOutput<VideoListItem>>;
+  findDue(limit: number, now: Date): Promise<Video[]>;
+  processingStatus(id: string): Promise<{ status: string; attemptCount: number } | null>;
 }
 export type VideoSort = "recent" | "oldest" | "title";

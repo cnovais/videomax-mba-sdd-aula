@@ -1,0 +1,3 @@
+import type { ProcessPendingVideosUseCase } from "@/usecase/pipeline/process-pending-videos.usecase";
+import { clearInterval, setInterval } from "node:timers";
+export class PipelineWorker { private timer: ReturnType<typeof setInterval> | null = null; constructor(private readonly process: ProcessPendingVideosUseCase, private readonly intervalMs: number) {} async tick(): Promise<void> { await this.process.execute(); } start(): void { if (!this.timer) this.timer = setInterval(() => { void this.tick(); }, this.intervalMs); } stop(): void { if (this.timer) clearInterval(this.timer); this.timer = null; } }

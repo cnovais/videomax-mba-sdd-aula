@@ -15,8 +15,8 @@ export class VideoPrismaRepository implements VideoRepository {
     const data = VideoMapper.toPersistence(video);
     await this.prisma.video.upsert({
       where: { id: data.id },
-      create: data,
-      update: data,
+      create: { ...data, nextAttemptAt: data.nextAttemptAt ?? data.uploadedAt },
+      update: { ...data, nextAttemptAt: data.nextAttemptAt ?? data.uploadedAt },
     });
   }
   async delete(id: string): Promise<void> { await this.prisma.video.delete({ where: { id } }); }
