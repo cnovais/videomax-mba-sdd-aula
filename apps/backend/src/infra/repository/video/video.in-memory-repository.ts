@@ -13,6 +13,7 @@ export class VideoInMemoryRepository implements VideoRepository {
     this.videosById.set(video.id, video);
     return Promise.resolve();
   }
+  delete(id: string): Promise<void> { this.videosById.delete(id); return Promise.resolve(); }
 
   /** Test-only helper: not part of the `VideoRepository` interface. */
   all(): Video[] {

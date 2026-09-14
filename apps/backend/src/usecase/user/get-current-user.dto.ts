@@ -7,4 +7,5 @@ export type GetCurrentUserOutput = {
   name: string;
   email: string;
   isAdmin: boolean;
+  libraryViewMode: "grid" | "list";
 };

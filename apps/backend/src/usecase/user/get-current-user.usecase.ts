@@ -16,6 +16,6 @@ export class GetCurrentUserUseCase {
   async execute(input: GetCurrentUserInput): Promise<GetCurrentUserOutput> {
     const user = await this.userRepo.findById(input.actorId);
     if (!user) throw new UserNotFoundError(input.actorId);
-    return { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin };
+    return { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin, libraryViewMode: user.libraryViewMode };
   }
 }

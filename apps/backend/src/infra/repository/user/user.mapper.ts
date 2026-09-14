@@ -8,6 +8,7 @@ export type UserPersistenceData = {
   hashedPassword: string;
   isAdmin: boolean;
   isSuspended: boolean;
+  libraryViewMode: string;
 };
 
 export class UserMapper {
@@ -20,6 +21,7 @@ export class UserMapper {
       isAdmin: row.isAdmin,
       isSuspended: row.isSuspended,
       createdAt: row.createdAt,
+      libraryViewMode: row.libraryViewMode,
     });
   }
 
@@ -31,6 +33,7 @@ export class UserMapper {
       hashedPassword: user.hashedPassword,
       isAdmin: user.isAdmin,
       isSuspended: user.isSuspended,
+      libraryViewMode: user.libraryViewMode,
     };
   }
 }

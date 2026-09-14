@@ -19,4 +19,5 @@ export class VideoPrismaRepository implements VideoRepository {
       update: { ...data, nextAttemptAt: data.nextAttemptAt ?? data.uploadedAt },
     });
   }
+  async delete(id: string): Promise<void> { await this.prisma.video.delete({ where: { id } }); }
 }

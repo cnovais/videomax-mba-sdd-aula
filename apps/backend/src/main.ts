@@ -9,6 +9,7 @@ import { SessionPrismaRepository } from "@/infra/repository/session/session.pris
 import { VideoPrismaRepository } from "@/infra/repository/video/video.prisma-repository";
 import { VideoPrismaQueries } from "@/infra/queries/video/video.prisma-queries";
 import { LocalDiskVideoStorageGateway } from "@/infra/gateway/local-disk-video-storage.gateway";
+import { ConfigurableFailureVideoStorageGateway } from "@/infra/gateway/configurable-failure-video-storage.gateway";
 import { FfprobeMediaProbeGateway } from "@/infra/gateway/ffprobe-media-probe.gateway";
 import { FfmpegThumbnailGateway } from "@/infra/gateway/ffmpeg-thumbnail.gateway";
 
@@ -20,6 +21,10 @@ import { ResolveSessionUseCase } from "@/usecase/session/resolve-session.usecase
 import { UploadVideoUseCase } from "@/usecase/video/upload-video.usecase";
 import { ListVideosUseCase } from "@/usecase/video/list-videos.usecase";
 import { GetVideoThumbnailUseCase } from "@/usecase/video/get-video-thumbnail.usecase";
+import { RenameVideoUseCase } from "@/usecase/video/rename-video.usecase";
+import { UpdateVideoDescriptionUseCase } from "@/usecase/video/update-video-description.usecase";
+import { DeleteVideoUseCase } from "@/usecase/video/delete-video.usecase";
+import { SetLibraryViewModeUseCase } from "@/usecase/user/set-library-view-mode.usecase";
 
 import { RegisterHandler } from "@/infra/http/auth/register.handler";
 import { LoginHandler } from "@/infra/http/auth/login.handler";
@@ -29,6 +34,9 @@ import { GetHealthHandler } from "@/infra/http/health/get-health.handler";
 import { UploadHandler } from "@/infra/http/video/upload.handler";
 import { ListHandler } from "@/infra/http/video/list.handler";
 import { ThumbnailHandler } from "@/infra/http/video/thumbnail.handler";
+import { UpdateHandler } from "@/infra/http/video/update.handler";
+import { DeleteHandler } from "@/infra/http/video/delete.handler";
+import { SetLibraryViewModeHandler } from "@/infra/http/auth/set-library-view-mode.handler";
 import { RetryHandler } from "@/infra/http/video/retry.handler";
 import { TranscriptionPrismaRepository } from "@/infra/repository/transcription/transcription.prisma-repository";
 import { SummaryPrismaRepository } from "@/infra/repository/summary/summary.prisma-repository";
@@ -53,7 +61,10 @@ export function bootstrap(): Promise<FastifyInstance> {
   const sessionRepo = new SessionPrismaRepository(prisma);
   const videoRepo = new VideoPrismaRepository(prisma);
   const videoQueries = new VideoPrismaQueries(prisma);
-  const videoStorage = new LocalDiskVideoStorageGateway(config.storageRoot);
+  const videoStorage = new ConfigurableFailureVideoStorageGateway(
+    new LocalDiskVideoStorageGateway(config.storageRoot),
+    config.storageDeleteFailureKeys,
+  );
   const mediaProbe = new FfprobeMediaProbeGateway();
   const thumbnailGateway = new FfmpegThumbnailGateway();
   const transcriptionRepo = new TranscriptionPrismaRepository(prisma);
@@ -70,6 +81,10 @@ export function bootstrap(): Promise<FastifyInstance> {
   const uploadVideo = new UploadVideoUseCase(videoRepo, videoStorage, mediaProbe, thumbnailGateway);
   const listVideos = new ListVideosUseCase(videoQueries);
   const getVideoThumbnail = new GetVideoThumbnailUseCase(videoRepo, videoStorage);
+  const renameVideo = new RenameVideoUseCase(videoRepo);
+  const updateVideoDescription = new UpdateVideoDescriptionUseCase(videoRepo);
+  const deleteVideo = new DeleteVideoUseCase(videoRepo, videoStorage);
+  const setLibraryViewMode = new SetLibraryViewModeUseCase(userRepo);
 
   // 4. Handlers
   const registerHandler = new RegisterHandler(createUser);
@@ -80,6 +95,9 @@ export function bootstrap(): Promise<FastifyInstance> {
   const uploadHandler = new UploadHandler(uploadVideo);
   const listHandler = new ListHandler(listVideos);
   const thumbnailHandler = new ThumbnailHandler(getVideoThumbnail);
+  const updateHandler = new UpdateHandler(renameVideo, updateVideoDescription);
+  const deleteHandler = new DeleteHandler(deleteVideo);
+  const setLibraryViewModeHandler = new SetLibraryViewModeHandler(setLibraryViewMode);
   const retryHandler = new RetryHandler(new RetryVideoUseCase(videoRepo));
 
   // 5. Routes + auth middleware
@@ -92,6 +110,9 @@ export function bootstrap(): Promise<FastifyInstance> {
     uploadHandler,
     listHandler,
     thumbnailHandler,
+    updateHandler,
+    deleteHandler,
+    setLibraryViewModeHandler,
     retryHandler,
   });
   const authMiddleware = new AuthMiddleware(resolveSession);

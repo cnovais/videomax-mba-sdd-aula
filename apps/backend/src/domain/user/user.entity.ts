@@ -1,6 +1,7 @@
 import { Email } from "./email.vo";
 import { HashedPassword } from "./hashed-password.vo";
 import { UserId } from "./user-id.vo";
+import { LibraryViewMode, type LibraryViewModeValue } from "./library-view-mode.vo";
 
 export type CreateUserProps = {
   name: string;
@@ -16,6 +17,7 @@ export type RestoreUserProps = {
   isAdmin: boolean;
   isSuspended: boolean;
   createdAt: Date;
+  libraryViewMode?: string;
 };
 
 export class User {
@@ -27,6 +29,7 @@ export class User {
     private readonly _isAdmin: boolean,
     private readonly _isSuspended: boolean,
     private readonly _createdAt: Date,
+    private readonly _libraryViewMode: LibraryViewMode,
   ) {}
 
   /**
@@ -45,6 +48,7 @@ export class User {
       false,
       false,
       new Date(),
+      LibraryViewMode.create("grid"),
     );
   }
 
@@ -58,6 +62,7 @@ export class User {
       props.isAdmin,
       props.isSuspended,
       props.createdAt,
+      LibraryViewMode.create(props.libraryViewMode ?? "grid"),
     );
   }
 
@@ -92,6 +97,9 @@ export class User {
   get createdAt(): Date {
     return this._createdAt;
   }
+
+  get libraryViewMode(): LibraryViewModeValue { return this._libraryViewMode.value; }
+  changeLibraryViewMode(mode: string): User { return User.restore({ id: this.id, name: this.name, email: this.email, hashedPassword: this.hashedPassword, isAdmin: this.isAdmin, isSuspended: this.isSuspended, createdAt: this.createdAt, libraryViewMode: LibraryViewMode.create(mode).value }); }
 
   toJSON(): never {
     throw new Error("Do not serialize Entity directly. Use toOutput() in the use case DTO.");

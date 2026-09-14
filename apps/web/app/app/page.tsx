@@ -3,7 +3,7 @@ import { LogoutButton } from "@/components/logout-button";
 import { VideoLibrary } from "@/components/video-library";
 import { backendFetch } from "@/lib/backend-client";
 import { getSessionToken } from "@/lib/session";
-import type { UploadedVideo } from "@/lib/upload-client";
+import type { VideoItem } from "@/lib/video-client";
 
 /**
  * Minimal placeholder authenticated landing, delivered by F02 (user
@@ -30,10 +30,10 @@ export default async function AppPlaceholderPage() {
   // GET variant, which clears the cookie before landing on `/` — this
   // avoids a redirect loop with `/`'s own cookie-presence check.
   if (!meResponse.ok) redirect("/api/auth/logout");
-  const user = (await meResponse.json()) as { name: string };
+  const user = (await meResponse.json()) as { name: string; libraryViewMode?: "grid" | "list" };
 
-  const initialVideos: UploadedVideo[] = videosResponse.ok
-    ? ((await videosResponse.json()) as { items: UploadedVideo[] }).items
+  const initialVideos: VideoItem[] = videosResponse.ok
+    ? ((await videosResponse.json()) as { items: VideoItem[] }).items
     : [];
 
   return (
@@ -42,7 +42,7 @@ export default async function AppPlaceholderPage() {
         <p className="text-lg text-ink">Welcome, {user.name}.</p>
         <LogoutButton />
       </div>
-      <VideoLibrary initialVideos={initialVideos} />
+      <VideoLibrary initialVideos={initialVideos} initialViewMode={user.libraryViewMode ?? "grid"} />
     </main>
   );
 }

@@ -52,13 +52,13 @@
         "F02",
         "F03"
       ],
-      "status": "pending",
-      "cycles": 0,
+      "status": "done",
+      "cycles": 2,
       "failure_reason": null,
-      "report_path": null,
-      "started_at": null,
-      "updated_at": "2026-09-05T20:08:19Z",
-      "completed_at": null
+      "report_path": "docs/F04-video-library/eval-report-2026-09-14T00-05-36Z.md",
+      "started_at": "2026-09-13T20:10:00Z",
+      "updated_at": "2026-09-14T00:20:26Z",
+      "completed_at": "2026-09-14T00:05:36Z"
     },
     "F05": {
       "name": "Folder Organization",
