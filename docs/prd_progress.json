@@ -180,13 +180,13 @@
         "F02",
         "F03"
       ],
-      "status": "pending",
-      "cycles": 0,
+      "status": "done",
+      "cycles": 2,
       "failure_reason": null,
-      "report_path": null,
+      "report_path": "docs/F12-administration-panel/eval-report-2026-09-14T00-11-00Z.md",
       "started_at": null,
-      "updated_at": "2026-09-05T20:08:19Z",
-      "completed_at": null
+      "updated_at": "2026-09-14T00:11:00Z",
+      "completed_at": "2026-09-14T00:11:00Z"
     }
   }
 }
