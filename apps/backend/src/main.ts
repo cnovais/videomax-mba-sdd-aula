@@ -29,6 +29,16 @@ import { GetHealthHandler } from "@/infra/http/health/get-health.handler";
 import { UploadHandler } from "@/infra/http/video/upload.handler";
 import { ListHandler } from "@/infra/http/video/list.handler";
 import { ThumbnailHandler } from "@/infra/http/video/thumbnail.handler";
+import { RetryHandler } from "@/infra/http/video/retry.handler";
+import { TranscriptionPrismaRepository } from "@/infra/repository/transcription/transcription.prisma-repository";
+import { SummaryPrismaRepository } from "@/infra/repository/summary/summary.prisma-repository";
+import { FfmpegAudioExtractionGateway } from "@/infra/gateway/ffmpeg-audio-extraction.gateway";
+import { OpenAiWhisperTranscriptionGateway } from "@/infra/gateway/openai-whisper-transcription.gateway";
+import { OpenAiSummaryGateway } from "@/infra/gateway/openai-summary.gateway";
+import { RunVideoStageUseCase } from "@/usecase/pipeline/run-video-stage.usecase";
+import { ProcessPendingVideosUseCase } from "@/usecase/pipeline/process-pending-videos.usecase";
+import { RetryVideoUseCase } from "@/usecase/pipeline/retry-video.usecase";
+import { PipelineWorker } from "@/infra/worker/pipeline-worker";
 import { UserPrismaQueries } from "@/infra/queries/user/user.prisma-queries";
 import { GetAdminOverviewUseCase } from "@/usecase/user/get-admin-overview.usecase"; import { ListUsersForAdminUseCase } from "@/usecase/user/list-users-for-admin.usecase"; import { SuspendUserUseCase } from "@/usecase/user/suspend-user.usecase"; import { ReactivateUserUseCase } from "@/usecase/user/reactivate-user.usecase"; import { DeleteUserUseCase } from "@/usecase/user/delete-user.usecase";
 import { AdminOverviewHandler } from "@/infra/http/admin/get-overview.handler"; import { AdminListHandler } from "@/infra/http/admin/list-users.handler"; import { AdminSuspendHandler } from "@/infra/http/admin/suspend-user.handler"; import { AdminReactivateHandler } from "@/infra/http/admin/reactivate-user.handler"; import { AdminDeleteHandler } from "@/infra/http/admin/delete-user.handler";
@@ -50,6 +60,10 @@ export function bootstrap(): Promise<FastifyInstance> {
   const videoStorage = new LocalDiskVideoStorageGateway(config.storageRoot);
   const mediaProbe = new FfprobeMediaProbeGateway();
   const thumbnailGateway = new FfmpegThumbnailGateway();
+  const transcriptionRepo = new TranscriptionPrismaRepository(prisma);
+  const summaryRepo = new SummaryPrismaRepository(prisma);
+  const runStage = new RunVideoStageUseCase(videoRepo, videoStorage, mediaProbe, new FfmpegAudioExtractionGateway(), new OpenAiWhisperTranscriptionGateway(config.openaiApiKey), transcriptionRepo, new OpenAiSummaryGateway(config.openaiApiKey), summaryRepo);
+  const worker = new PipelineWorker(new ProcessPendingVideosUseCase(videoQueries, runStage, config.pipelineWorkerConcurrency), config.pipelinePollIntervalMs);
 
   // 3. Use cases
   const createUser = new CreateUserUseCase(userRepo, sessionRepo, config.sessionSecret);
@@ -80,6 +94,7 @@ export function bootstrap(): Promise<FastifyInstance> {
   const adminSuspendHandler = new AdminSuspendHandler(suspendUser);
   const adminReactivateHandler = new AdminReactivateHandler(reactivateUser);
   const adminDeleteHandler = new AdminDeleteHandler(deleteUser);
+  const retryHandler = new RetryHandler(new RetryVideoUseCase(videoRepo));
 
   // 5. Routes + auth middleware
   const routes = buildHttpRoutes({
@@ -93,12 +108,15 @@ export function bootstrap(): Promise<FastifyInstance> {
     thumbnailHandler,
     overviewHandler, adminListHandler, suspendHandler: adminSuspendHandler,
     reactivateHandler: adminReactivateHandler, deleteHandler: adminDeleteHandler,
+    retryHandler,
   });
   const authMiddleware = new AuthMiddleware(resolveSession);
 
   // 6. Server
   const app = buildFastifyServer({ routes, authMiddleware, logger: { level: config.logLevel } });
   app.addHook("onClose", () => prisma.$disconnect());
+  app.addHook("onReady", () => worker.start());
+  app.addHook("onClose", () => worker.stop());
 
   return Promise.resolve(app);
 }
