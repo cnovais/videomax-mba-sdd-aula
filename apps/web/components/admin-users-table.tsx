@@ -29,7 +29,11 @@ export function AdminUsersTable({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [deleteUser, setDeleteUser] = useState<AdminUser | null>(null);
-  const go = (extra: string) => router.push(`/admin/users?${extra}`);
+  const go = (extra: string) => {
+    const query = new URLSearchParams(extra);
+    if (search && !query.has("search")) query.set("search", search);
+    router.push(`/admin/users?${query.toString()}`);
+  };
 
   async function action(user: AdminUser): Promise<void> {
     await fetch(`/api/admin/users/${user.id}/${user.isSuspended ? "reactivate" : "suspend"}`, {
