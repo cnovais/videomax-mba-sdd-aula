@@ -1,0 +1,1 @@
+ALTER TABLE "videos" ALTER COLUMN "nextAttemptAt" DROP NOT NULL;

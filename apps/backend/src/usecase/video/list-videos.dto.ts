@@ -13,6 +13,8 @@ export type VideoListItemDto = {
   sizeBytes: number;
   durationSeconds: number;
   uploadedAt: string;
+  attemptCount: number;
+  failureReason: string | null;
 };
 
 export function toItemOutput(item: VideoListItem): VideoListItemDto {
@@ -24,5 +26,7 @@ export function toItemOutput(item: VideoListItem): VideoListItemDto {
     sizeBytes: item.sizeBytes,
     durationSeconds: item.durationSeconds,
     uploadedAt: item.uploadedAt.toISOString(),
+    attemptCount: item.attemptCount,
+    failureReason: item.failureReason,
   };
 }

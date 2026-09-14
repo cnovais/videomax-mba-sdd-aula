@@ -95,7 +95,7 @@ export class Video {
       props.thumbnailPath,
       props.uploadedAt,
       props.attemptCount ?? 0,
-      props.nextAttemptAt ?? props.uploadedAt,
+      props.nextAttemptAt === undefined ? props.uploadedAt : props.nextAttemptAt,
       props.failedStage ?? null,
       props.failureReason ?? null,
       props.audioStorageKey ?? null,
@@ -157,7 +157,13 @@ export class Video {
   get audioStorageKey(): string | null { return this._audioStorageKey; }
 
   markValidated(audioStorageKey: string): void { this._audioStorageKey = audioStorageKey; this._nextAttemptAt = new Date(); }
-  advanceTo(stage: "transcribing" | "summarizing" | "ready"): void { this._status = VideoStatus.create(stage); this._attemptCount = 0; this._nextAttemptAt = new Date(); }
+  advanceTo(stage: "transcribing" | "summarizing" | "ready"): void {
+    this._status = VideoStatus.create(stage);
+    this._attemptCount = 0;
+    this._failedStage = null;
+    this._failureReason = null;
+    this._nextAttemptAt = new Date();
+  }
   recordTransientFailure(stage: "transcribing" | "summarizing", reason: string, now = new Date()): void {
     this._attemptCount += 1; this._failedStage = stage; this._failureReason = reason;
     if (this._attemptCount >= 3) { this._status = VideoStatus.create("failed"); this._nextAttemptAt = null; return; }
