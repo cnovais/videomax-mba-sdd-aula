@@ -9,6 +9,8 @@
 **Retry budget:** `3` (default)
 **Status:** `success`
 
+**Pull request:** Existing PR updated: https://github.com/cnovais/videomax-mba-sdd-aula/pull/6
+
 **Overrides applied (orchestrator-level):**
 
 *(none)*
