@@ -14,6 +14,11 @@ export type VideoPersistenceData = {
   status: string;
   thumbnailPath: string | null;
   uploadedAt: Date;
+  attemptCount: number;
+  nextAttemptAt: Date | null;
+  failedStage: string | null;
+  failureReason: string | null;
+  audioStorageKey: string | null;
 };
 
 export class VideoMapper {
@@ -31,6 +36,7 @@ export class VideoMapper {
       status: row.status,
       thumbnailPath: row.thumbnailPath,
       uploadedAt: row.uploadedAt,
+      attemptCount: row.attemptCount, nextAttemptAt: row.nextAttemptAt, failedStage: row.failedStage, failureReason: row.failureReason, audioStorageKey: row.audioStorageKey,
     });
   }
 
@@ -48,6 +54,7 @@ export class VideoMapper {
       status: video.status,
       thumbnailPath: video.thumbnailPath,
       uploadedAt: video.uploadedAt,
+      attemptCount: video.attemptCount, nextAttemptAt: video.nextAttemptAt ?? video.uploadedAt, failedStage: video.failedStage, failureReason: video.failureReason, audioStorageKey: video.audioStorageKey,
     };
   }
 }

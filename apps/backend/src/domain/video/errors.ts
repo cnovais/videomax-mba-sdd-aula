@@ -18,6 +18,8 @@ export class VideoNotFoundError extends NotFoundError {
   }
 }
 
+export class VideoNotFailedError extends DomainError { readonly code = "VIDEO_NOT_FAILED"; readonly status = 422; constructor(id: string) { super(`Video is not failed: "${id}"`); } }
+
 export class UnsupportedFormatError extends DomainError {
   readonly code = "UNSUPPORTED_FORMAT";
   readonly status = 422;
