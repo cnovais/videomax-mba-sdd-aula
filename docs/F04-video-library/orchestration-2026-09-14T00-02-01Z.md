@@ -29,6 +29,7 @@
 |---|---|---|---|---|
 | 0 | implement-feature | `incomplete` | phases `16/16` committed | — |
 | 0 | evaluator | `clean` | `P=27 F=0 B=0 M=0 S=0` (of `27`) · ACs `✓10 ✗0 ⊘0` | `eval-report-2026-09-14T00-00-37Z.md` |
+| post-sync | evaluator | `clean` | `P=27 F=0 B=0 M=0 S=0` (of `27`) · ACs `✓10 ✗0 ⊘0` | `eval-report-2026-09-14T00-05-36Z.md` |
 
 ## Cycle Detail
 
@@ -78,8 +79,9 @@
 
 Clean evaluator verdict: every contract item and acceptance criterion passed.
 
+Post-sync verification against `origin/main` also passed cleanly.
+
 ## Soft-fails (run-level)
 
 - Frontend lint emitted one existing `@next/next/no-img-element` warning; no errors.
 - Two earlier evaluator reports were already untracked in the worktree and were preserved unchanged.
-
